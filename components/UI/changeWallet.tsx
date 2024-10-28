@@ -69,8 +69,8 @@ const ChangeWallet: FunctionComponent<ChangeWalletProps> = ({
                     <WalletIcons id={connector.id} />
                     {connector.id === "braavos" ||
                     connector.id === "argentX" ||
-                    connector.id === "okxwallet" ||
-                    connector.id === "bitkeep"
+                    connector.id === "bitkeep" ||
+                    connector.id === "okxwallet"
                       ? `Connect ${connector.name}`
                       : "Login with Email"}
                   </div>

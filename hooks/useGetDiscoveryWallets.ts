@@ -31,7 +31,7 @@ export default function useGetDiscoveryWallets(
             setBitkeep(
               browser
                 ? wallet.downloads[browser as keyof typeof wallet.downloads]
-                : "https://chromewebstore.google.com/detail/bitget-wallet-formerly-bi/jiidiaalihmmhddjgbnbgdfflelocpak"
+                : "https://web3.bitget.com/en/wallet-download"
             );
           }
         });
