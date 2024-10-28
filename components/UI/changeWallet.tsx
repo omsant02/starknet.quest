@@ -53,7 +53,13 @@ const ChangeWallet: FunctionComponent<ChangeWalletProps> = ({
             ></path>
           </svg>
         </button>
-        <Typography type={TEXT_TYPE.BODY_NORMAL} color="secondary" className={styles.menu_title}>Change wallet</Typography>
+        <Typography
+          type={TEXT_TYPE.BODY_NORMAL}
+          color="secondary"
+          className={styles.menu_title}
+        >
+          Change wallet
+        </Typography>
         {connectors.map((connector) => {
           if (connector.available()) {
             return (
@@ -63,7 +69,8 @@ const ChangeWallet: FunctionComponent<ChangeWalletProps> = ({
                     <WalletIcons id={connector.id} />
                     {connector.id === "braavos" ||
                     connector.id === "argentX" ||
-                    connector.id === "okxwallet"
+                    connector.id === "okxwallet" ||
+                    connector.id === "bitkeep"
                       ? `Connect ${connector.name}`
                       : "Login with Email"}
                   </div>
@@ -71,7 +78,11 @@ const ChangeWallet: FunctionComponent<ChangeWalletProps> = ({
               </div>
             );
           } else {
-            if (connector.id === "braavos" || connector.id === "argentX") {
+            if (
+              connector.id === "braavos" ||
+              connector.id === "argentX" ||
+              connector.id === "bitkeep"
+            ) {
               return (
                 <div className="mt-5 flex justify-center" key={connector.id}>
                   <Button
@@ -95,7 +106,12 @@ const ChangeWallet: FunctionComponent<ChangeWalletProps> = ({
             }
           }
         })}
-        <Typography color="secondary" type={TEXT_TYPE.BODY_MIDDLE} onClick={() => closeWallet()} className={styles.closeMobile}>
+        <Typography
+          color="secondary"
+          type={TEXT_TYPE.BODY_MIDDLE}
+          onClick={() => closeWallet()}
+          className={styles.closeMobile}
+        >
           Close
         </Typography>
       </div>
