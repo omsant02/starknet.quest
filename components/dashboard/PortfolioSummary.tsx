@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useMemo, useCallback, useState } from "react";
+import React, { FunctionComponent, useMemo, useState } from "react";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "@components/UI/typography/typography";
 import { Doughnut } from "react-chartjs-2";
