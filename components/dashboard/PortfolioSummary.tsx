@@ -8,8 +8,8 @@ import { CDNImg } from "@components/cdn/image";
 import starknetIcon from "../../public/starknet/favicon.ico";
 import cursor from '../../public/icons/cursor.png';
 import cursorPointer from '../../public/icons/pointer-cursor.png';
-import ClaimModal from "./claimModal";
-import SuccessModal from "./successModal";
+import ClaimModal from "../discover/claimModal";
+import SuccessModal from "../discover/successModal";
 Chart.register(ArcElement, DoughnutController, Tooltip);
 
 type PortfolioSummaryProps = {
