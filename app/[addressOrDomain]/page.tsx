@@ -216,20 +216,20 @@ export default function Page({ params }: AddressOrDomainProps) {
         });
       }
 
-      // Skip tokens that belong to staking protocols
-      if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
-        continue;
-      }
-
       const value = await calculateTokenPrice(
         token.tokenAddress,
         tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
         "USD"
       );
 
-      const symbol = tokenInfo.symbol || "Unknown";
-      assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      // Add to total value regardless of protocol
       totalValue += value;
+
+      // Only add to asset breakdown if not from excluded protocol
+      if (!tokenInfo.dappId || !EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
+        const symbol = tokenInfo.symbol || "Unknown";
+        assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      }
     }
 
     // Convert to percentages and format
