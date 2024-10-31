@@ -55,6 +55,14 @@ type DebtStatus = {
   }[];
 };
 
+// Protocols to exclude from asset percentages
+const EXCLUDED_PROTOCOL_IDS = [
+  '8e4c3af5-f9bc-4646-9b66-3cd7bf7c8aec',  // zkLend
+  '19a6474c-17a9-4d61-95ab-5f768cd01485',  // Nimbora
+  '6203cd68-991a-4bae-a18a-ff42207ce813',  // Vesu
+  // TODO: Add more protocols or add better exclusion logic (ban all protocols?)
+];
+
 export default function Page({ params }: AddressOrDomainProps) {
   const router = useRouter();
   const addressOrDomain = params.addressOrDomain;
@@ -189,18 +197,99 @@ export default function Page({ params }: AddressOrDomainProps) {
     setQuestsLoading(false);
   }, []);
 
+  const calculateAssetPercentages = async (userTokens: ArgentUserToken[], tokens: ArgentTokenMap) => {
+    // First get dapps data
+    const dapps = await fetchDapps();
+
+    let totalValue = 0;
+    const assetValues: { [symbol: string]: number } = {};
+
+    // First pass: calculate total value and individual token values
+    for await (const token of userTokens) {
+      const tokenInfo = tokens[token.tokenAddress];
+      if (!tokenInfo || token.tokenBalance === "0") continue;
+
+      console.log(tokenInfo);
+
+      if (tokenInfo.dappId) {
+        console.log('Dapp info for token', tokenInfo.name, {
+          dappName: dapps[tokenInfo.dappId]?.name,
+          dappId: tokenInfo.dappId,
+          dappDetails: dapps[tokenInfo.dappId]
+        });
+      }
+
+      // Skip tokens that belong to staking protocols
+      if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
+        continue;
+      }
+
+      const value = await calculateTokenPrice(
+        token.tokenAddress,
+        tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
+        "USD"
+      );
+
+      const symbol = tokenInfo.symbol || "Unknown";
+      assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      totalValue += value;
+    }
+
+    // Convert to percentages and format
+    const sortedAssets = Object.entries(assetValues)
+      .sort(([, a], [, b]) => b - a)
+      .map(([symbol, value]) => ({
+        itemLabel: symbol,
+        itemValue: ((value / totalValue) * 100).toFixed(2),
+        itemValueSymbol: "%",
+        color: "" // Colors will be assigned later
+      }));
+
+    console.log(sortedAssets.slice());
+
+    // Handle "Others" category if needed
+    if (sortedAssets.length > 4) {
+      const others = sortedAssets.slice(4).reduce(
+        (sum, asset) => sum + parseFloat(asset.itemValue),
+        0
+      );
+      sortedAssets.splice(4);
+      sortedAssets.push({
+        itemLabel: "Others",
+        itemValue: others.toFixed(2),
+        itemValueSymbol: "%",
+        color: ""
+      });
+    }
+
+    // Assign colors
+    const colors = ["#1E2097", "#637DEB", "#2775CA", "#5CE3FE", "#F4FAFF"];
+    sortedAssets.forEach((asset, index) => {
+      asset.color = colors[index];
+    });
+
+    return sortedAssets;
+  };
+
   const fetchPortfolioAssets = useCallback(async (addr: string) => {
+    setLoadingProtocols(true);
+    try {
+      const [dapps, tokens, userTokens, userDapps] = await Promise.all([
+        fetchDapps(),
+        fetchTokens(),
+        fetchUserTokens(addr),
+        fetchUserDapps(addr)
+      ]);
 
-    // TODO: Implement fetch from Argent API
-    const assets = [
-      { color: "#1E2097", itemLabel: "USDC", itemValue: "46.68", itemValueSymbol: "%" },
-      { color: "#637DEB", itemLabel: "USDT", itemValue: "27.94", itemValueSymbol: "%" },
-      { color: "#2775CA", itemLabel: "STRK", itemValue: "22.78", itemValueSymbol: "%" },
-      { color: "#5CE3FE", itemLabel: "ETH", itemValue: "0.36", itemValueSymbol: "%" },
-      { color: "#F4FAFF", itemLabel: "Others", itemValue: "2.36", itemValueSymbol: "%" },
-    ];
-    setPortfolioAssets(assets);
+      if (!tokens || !userTokens) return;
 
+      const assets = await calculateAssetPercentages(userTokens, tokens);
+      setPortfolioAssets(assets);
+    } catch (error) {
+      showNotification("Error while fetching portfolio assets", "error");
+      console.log("Error while fetching portfolio assets", error);
+    }
+    setLoadingProtocols(false);
   }, []);
 
   const userHasDebt = (userDapps: ArgentUserDapp[]) => {
