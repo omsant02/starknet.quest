@@ -38,6 +38,8 @@ export const availableConnectors = [
   new InjectedConnector({ options: { id: "braavos", name: "Braavos" } }),
   new InjectedConnector({ options: { id: "argentX", name: "Argent X" } }),
   new InjectedConnector({ options: { id: "bitkeep", name: "Bitget Wallet" } }),
+  new InjectedConnector({ options: { id: "okxwallet", name: "Okx Wallet" } }), // Added okxwallet
+
   new WebWalletConnector({
     url:
       getCurrentNetwork() === "TESTNET"
