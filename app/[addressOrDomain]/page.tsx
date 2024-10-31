@@ -197,10 +197,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     setQuestsLoading(false);
   }, []);
 
-  const calculateAssetPercentages = async (userTokens: ArgentUserToken[], tokens: ArgentTokenMap) => {
-    // First get dapps data
-    const dapps = await fetchDapps();
-
+  const calculateAssetPercentages = async (userTokens: ArgentUserToken[], tokens: ArgentTokenMap, dapps: ArgentDappMap) => {
     let totalValue = 0;
     const assetValues: { [symbol: string]: number } = {};
 
@@ -271,25 +268,21 @@ export default function Page({ params }: AddressOrDomainProps) {
     return sortedAssets;
   };
 
-  const fetchPortfolioAssets = useCallback(async (addr: string) => {
-    setLoadingProtocols(true);
+  const fetchPortfolioAssets = useCallback(async (data: {
+    dapps: ArgentDappMap,
+    tokens: ArgentTokenMap,
+    userTokens: ArgentUserToken[],
+    userDapps: ArgentUserDapp[]
+  }) => {
+    const { dapps, tokens, userTokens, userDapps } = data;
     try {
-      const [dapps, tokens, userTokens, userDapps] = await Promise.all([
-        fetchDapps(),
-        fetchTokens(),
-        fetchUserTokens(addr),
-        fetchUserDapps(addr)
-      ]);
-
       if (!tokens || !userTokens) return;
-
-      const assets = await calculateAssetPercentages(userTokens, tokens);
+      const assets = await calculateAssetPercentages(userTokens, tokens, dapps);
       setPortfolioAssets(assets);
     } catch (error) {
       showNotification("Error while fetching portfolio assets", "error");
       console.log("Error while fetching portfolio assets", error);
     }
-    setLoadingProtocols(false);
   }, []);
 
   const userHasDebt = (userDapps: ArgentUserDapp[]) => {
@@ -403,25 +396,15 @@ export default function Page({ params }: AddressOrDomainProps) {
     });
   }
 
-  const fetchPortfolioProtocols = useCallback(async (addr: string) => {
-    let dapps: ArgentDappMap = {};
-    let tokens: ArgentTokenMap = {};
-    let userTokens: ArgentUserToken[] = [];
-    let userDapps: ArgentUserDapp[] = [];
+  const fetchPortfolioProtocols = useCallback(async (data: {
+    dapps: ArgentDappMap, 
+    tokens: ArgentTokenMap, 
+    userTokens: ArgentUserToken[], 
+    userDapps: ArgentUserDapp[]
+  }) => {
+    const { dapps, tokens, userTokens, userDapps } = data;
 
-    setLoadingProtocols(true);
-    try {
-      [dapps, tokens, userTokens, userDapps] = await Promise.all([
-        fetchDapps(),
-        fetchTokens(),
-        fetchUserTokens(addr),
-        fetchUserDapps(addr)
-      ]);
-    } catch (error) {
-      showNotification("Error while fetching address portfolio", "error");
-      console.log("Error while fetching address portfolio", error);
-    }
-
+    // TODO correct this
     if (!dapps || !tokens || (!userTokens && !userDapps)) return;
     let protocolsMap: ChartItemMap = {};
 
@@ -439,16 +422,44 @@ export default function Page({ params }: AddressOrDomainProps) {
       showNotification("Error while calculating address portfolio stats", "error");
       console.log("Error while calculating address portfolio stats", error);
     }
+  }, [address]);
 
-    setLoadingProtocols(false);
-  }, []);
+  const fetchPortfolioData = useCallback(async (addr: string) => {
+    setLoadingProtocols(true);
+    try {
+      const [dappsData, tokensData, userTokensData, userDappsData] =
+        await Promise.all([
+          fetchDapps(),
+          fetchTokens(),
+          fetchUserTokens(addr),
+          fetchUserDapps(addr),
+        ]);
+
+      const data = {
+        dapps: dappsData,
+        tokens: tokensData,
+        userTokens: userTokensData,
+        userDapps: userDappsData,
+      };
+
+      await Promise.all([
+        fetchPortfolioProtocols(data),
+        fetchPortfolioAssets(data),
+      ]);
+    } catch (error) {
+      showNotification("Error while fetching address portfolio", "error");
+      console.log("Error while fetching address portfolio", error);
+    } finally {
+      setLoadingProtocols(false);
+    }
+  }, [fetchPortfolioProtocols, fetchPortfolioAssets]);
 
   useEffect(() => {
     if (!identity) return;
+    console.log("Fetching data for identity", identity.owner);
     fetchQuestData(identity.owner);
     fetchPageData(identity.owner);
-    fetchPortfolioAssets(identity.owner);
-    fetchPortfolioProtocols(identity.owner);
+    fetchPortfolioData(identity.owner);
   }, [identity]);
 
   useEffect(() => setNotFound(false), [dynamicRoute]);
