@@ -312,7 +312,7 @@ export default function Page() {
   useEffect(() => {
     if (inititalFetchTop50 && address && duration !== TOP_50_TAB_STRING) {
       const requestBody = {
-        addr: currentSearchedAddress || (userAddress ? hexToDecimal(userAddress) : address || ""),
+         addr: currentSearchedAddress || (userAddress ? hexToDecimal(userAddress) : address || ""),
         page_size: rowsPerPage,
         shift: 0,
         duration: timeFrameMap(duration),
