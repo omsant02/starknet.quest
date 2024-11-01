@@ -197,8 +197,15 @@ export default function Page({ params }: AddressOrDomainProps) {
     setQuestsLoading(false);
   }, []);
 
-  const calculateAssetPercentages = async (userTokens: ArgentUserToken[], tokens: ArgentTokenMap, dapps: ArgentDappMap) => {
+  const calculateAssetPercentages = async (
+    userTokens: ArgentUserToken[],
+    tokens: ArgentTokenMap,
+    dapps: ArgentDappMap,
+    userDapps: ArgentUserDapp[],
+  ) => {
     let totalValue = 0;
+    let totalTokenValue = 0;
+    let totalProtocolValue = 0;
     const assetValues: { [symbol: string]: number } = {};
 
     // First pass: calculate total value and individual token values
@@ -216,6 +223,11 @@ export default function Page({ params }: AddressOrDomainProps) {
         });
       }
 
+      // Skip tokens from excluded protocols
+      if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
+        continue;
+      }
+
       const value = await calculateTokenPrice(
         token.tokenAddress,
         tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
@@ -224,13 +236,51 @@ export default function Page({ params }: AddressOrDomainProps) {
 
       // Add to total value regardless of protocol
       totalValue += value;
+      totalTokenValue += value;
+      console.log('Added token value:', value, 'from token:', tokenInfo.symbol);
 
       // Only add to asset breakdown if not from excluded protocol
-      if (!tokenInfo.dappId || !EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
-        const symbol = tokenInfo.symbol || "Unknown";
-        assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      const symbol = tokenInfo.symbol || "Unknown";
+      assetValues[symbol] = (assetValues[symbol] || 0) + value;
+    }
+
+    // Process tokens from userDapps
+    for await (const userDapp of userDapps) {
+      const positions = userDapp.products[0]?.positions;
+      if (!positions) continue;
+
+      for (const position of positions) {
+        const totalBalances = position.totalBalances;
+        for (const tokenAddress of Object.keys(totalBalances)) {
+          const tokenBalance = totalBalances[tokenAddress];
+          const tokenInfo = tokens[tokenAddress];
+          if (!tokenInfo) continue;
+          if (tokenBalance === "0") continue;
+
+          const value = await calculateTokenPrice(
+            tokenAddress,
+            tokenToDecimal(tokenBalance, tokenInfo.decimals),
+            "USD"
+          );
+
+          totalProtocolValue += value;
+
+          // Don't add negative balances to total value (or may have percentages > 100%)
+          if (value < 0) continue;
+          // Add to total value regardless of protocol
+          totalValue += value;
+          console.log('Added protocol value:', value, 'from token:', tokenInfo.symbol, 'protocol:', dapps[userDapp.dappId].name);
+          // Only add to asset breakdown if not from excluded protocol. Restaking anyone?
+          if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
+            continue;
+          }
+          const symbol = tokenInfo.symbol || "Unknown";
+          assetValues[symbol] = (assetValues[symbol] || 0) + value;
+        }
       }
     }
+
+    console.log("!!!Total value:", totalValue, "Total token value:", totalTokenValue, "Total protocol value:", totalProtocolValue);
 
     // Convert to percentages and format
     const sortedAssets = Object.entries(assetValues)
@@ -242,6 +292,7 @@ export default function Page({ params }: AddressOrDomainProps) {
         color: "" // Colors will be assigned later
       }));
 
+    console.log(JSON.stringify(sortedAssets, null, 2));
     console.log(sortedAssets.slice());
 
     // Handle "Others" category if needed
@@ -276,8 +327,9 @@ export default function Page({ params }: AddressOrDomainProps) {
   }) => {
     const { dapps, tokens, userTokens, userDapps } = data;
     try {
+      // TODO: correct this condition
       if (!tokens || !userTokens) return;
-      const assets = await calculateAssetPercentages(userTokens, tokens, dapps);
+      const assets = await calculateAssetPercentages(userTokens, tokens, dapps, userDapps);
       setPortfolioAssets(assets);
     } catch (error) {
       showNotification("Error while fetching portfolio assets", "error");
@@ -404,7 +456,6 @@ export default function Page({ params }: AddressOrDomainProps) {
   }) => {
     const { dapps, tokens, userTokens, userDapps } = data;
 
-    // TODO correct this
     if (!dapps || !tokens || (!userTokens && !userDapps)) return;
     let protocolsMap: ChartItemMap = {};
 
