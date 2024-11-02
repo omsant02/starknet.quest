@@ -14,7 +14,7 @@ import {
 } from "@services/apiService";
 import { calculatePercentile } from "@utils/numberService";
 import styles from "@styles/leaderboard.module.css";
-import { useAccount } from "@starknet-react/core";
+import { useAccount,type Address } from "@starknet-react/core";
 import LeaderboardSkeleton from "@components/skeletons/leaderboardSkeleton";
 import FeaturedQuest from "@components/UI/featured_banner/featuredQuest";
 import { QuestsContext } from "@context/QuestsProvider";
@@ -43,6 +43,7 @@ import {
   LeaderboardRankingParams,
   LeaderboardTopperParams,
 } from "../../types/backTypes";
+
 
 export default function Page() {
   const router = useRouter();

@@ -44,7 +44,9 @@ const WalletButton: FunctionComponent<WalletButtonProps> = ({
   const [unfocus, setUnfocus] = useState<boolean>(false);
   const network = currentNetwork === "TESTNET" ? "testnet" : "mainnet";
   const isWebWallet =
-    (connector as Connector)?.wallet?.id === "argentWebWallet";
+    (connector as Connector)?.id === "argentWebWallet";
+
+    // console.log(connector?.id,"wallet")
 
   const buttonName = useMemo(
     () =>

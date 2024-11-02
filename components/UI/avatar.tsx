@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from "react";
 import ProfilIcon from "@components/UI/iconsComponents/icons/profilIcon";
 import theme from "@styles/theme";
-import { useStarkProfile } from "@starknet-react/core";
+import { useStarkProfile, type Address } from "@starknet-react/core";
 
 type AvatarProps = {
   address: string;
@@ -9,14 +9,15 @@ type AvatarProps = {
 };
 
 const Avatar: FunctionComponent<AvatarProps> = ({ address, width = "32" }) => {
-  const { data: profileData } = useStarkProfile({ address });
-
+  const { data: profileData } = useStarkProfile({
+    address: (address.startsWith("0x") ? address : `0x${address}`) as Address,
+  });
 
   return (
     <>
       {profileData?.profilePicture ? (
         <img
-          src={profileData?.profilePicture}
+          src={profileData.profilePicture}
           width={width}
           height={width}
           className="rounded-full"
