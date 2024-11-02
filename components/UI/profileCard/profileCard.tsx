@@ -6,8 +6,6 @@ import React, {
   useState,
 } from "react";
 import styles from "@styles/dashboard.module.css";
-import CopyIcon from "@components/UI/iconsComponents/icons/copyIcon";
-import { CDNImage } from "@components/cdn/image";
 import { useStarkProfile } from "@starknet-react/core";
 import { minifyAddress } from "@utils/stringService";
 import trophyIcon from "public/icons/trophy.svg";
@@ -15,16 +13,16 @@ import xpIcon from "public/icons/xpBadge.svg";
 import useCreationDate from "@hooks/useCreationDate";
 import shareSrc from "public/icons/share.svg";
 import theme from "@styles/theme";
-import { Tooltip } from "@mui/material";
-import CopyAddress from "@components/UI/CopyAddress"; 
+import { Eye } from 'lucide-react';
 import ProfilIcon from "../iconsComponents/icons/profilIcon";
 import Link from "next/link";
 import SocialMediaActions from "../actions/socialmediaActions";
-import { getTweetLink, writeToClipboard } from "@utils/browserService";
+import { getTweetLink } from "@utils/browserService";
 import { hexToDecimal } from "@utils/feltService";
 import { Url } from "next/dist/shared/lib/router/router";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
+import { CDNImage } from "@components/cdn/image";
 
 const ProfileCard: FunctionComponent<ProfileCard> = ({
   rankingData,
@@ -33,11 +31,9 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
   addressOrDomain,
   isOwner,
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [userXp, setUserXp] = useState<number>();
   const sinceDate = useCreationDate(identity);
   const { data: profileData } = useStarkProfile({ address: identity.owner });
-  const [userXp, setUserXp] = useState<number>();
-
 
   const rankFormatter = useCallback((rank: number) => {
     if (rank > 10000) return "+10k";
@@ -85,23 +81,42 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
           )}
         </div>
 
-          <div className="flex flex-col h-full justify-center">
-            <Typography type={TEXT_TYPE.BODY_SMALL} color="secondary" className={styles.accountCreationDate}>
-              {sinceDate ? `${sinceDate}` : ""}
-            </Typography>
-            <Typography type={TEXT_TYPE.H2} className={`${styles.profile_name} mt-2`}>{identity.domain.domain}</Typography>
-            <div className={styles.address_div}>
-            <CopyAddress
-                  address={identity?.owner ?? ""}
-                  iconSize="24"
-                  className={styles.copyButton}
-                  wallet={false}
-                />
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.addressText} color="secondary">
-                {minifyAddress(addressOrDomain ?? identity?.owner, 8)}
+        <div className="flex flex-col h-full justify-center">
+          <Typography type={TEXT_TYPE.BODY_SMALL} color="secondary" className={styles.accountCreationDate}>
+            {sinceDate ? `${sinceDate}` : ""}
+          </Typography>
+          <Typography type={TEXT_TYPE.H2} className={`${styles.profile_name} mt-2`}>
+            {identity.domain.domain}
+          </Typography>
+          {/* Wallet Amount Display */}
+          <div className={styles.address_div}>
+            <div className="flex items-center gap-2">
+              <Typography type={TEXT_TYPE.BODY_SMALL} className={`${styles.addressText} font-extrabold`}>
+                $2,338.34
               </Typography>
+              <Eye />
             </div>
-            <div className="flex sm:hidden justify-center py-4">
+          </div>
+          <div className="flex sm:hidden justify-center py-4">
+            <SocialMediaActions identity={identity} />
+            <Link href={shareLink} target="_blank" rel="noreferrer">
+              <div className={styles.right_share_button}>
+                <CDNImage
+                  src={shareSrc}
+                  width={20}
+                  height={20}
+                  alt={"share-icon"}
+                />
+                <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+      <div className={styles.right}>
+        <div className="hidden sm:flex">
+          <div className={styles.right_top}>
+            <div className={styles.right_socials}>
               <SocialMediaActions identity={identity} />
               <Link href={shareLink} target="_blank" rel="noreferrer">
                 <div className={styles.right_share_button}>
@@ -117,25 +132,6 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
             </div>
           </div>
         </div>
-        <div className={styles.right}>
-          <div className="hidden sm:flex">
-            <div className={styles.right_top}>
-              <div className={styles.right_socials}>
-                <SocialMediaActions identity={identity} />
-                <Link href={shareLink} target="_blank" rel="noreferrer">
-                  <div className={styles.right_share_button}>
-                    <CDNImage
-                      src={shareSrc}
-                      width={20}
-                      height={20}
-                      alt={"share-icon"}
-                    />
-                    <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
 
         <div className={styles.right_bottom}>
           {leaderboardData && leaderboardData?.total_users > 0 ? (
