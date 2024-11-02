@@ -8,7 +8,7 @@ import React, {
 import styles from "@styles/dashboard.module.css";
 import CopyIcon from "@components/UI/iconsComponents/icons/copyIcon";
 import { CDNImage } from "@components/cdn/image";
-import { useStarkProfile } from "@starknet-react/core";
+import { useStarkProfile,type Address } from "@starknet-react/core";
 import { minifyAddress } from "@utils/stringService";
 import trophyIcon from "public/icons/trophy.svg";
 import xpIcon from "public/icons/xpBadge.svg";
@@ -35,7 +35,8 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const sinceDate = useCreationDate(identity);
-  const { data: profileData } = useStarkProfile({ address: identity.owner });
+  const formattedAddress = (identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`) as Address;
+  const { data: profileData } = useStarkProfile({ address: formattedAddress });
   const [userXp, setUserXp] = useState<number>();
 
 
