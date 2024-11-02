@@ -46,7 +46,6 @@ const WalletButton: FunctionComponent<WalletButtonProps> = ({
   const isWebWallet =
     (connector as Connector)?.id === "argentWebWallet";
 
-    // console.log(connector?.id,"wallet")
 
   const buttonName = useMemo(
     () =>

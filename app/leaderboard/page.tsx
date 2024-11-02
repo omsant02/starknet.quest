@@ -31,7 +31,6 @@ import Divider from "@mui/material/Divider";
 import Blur from "@components/shapes/blur";
 import RankingsTable from "@components/leaderboard/RankingsTable";
 import { TOP_50_TAB_STRING } from "@constants/common";
-// import {  } from "@utils/feltService";
 import Avatar from "@components/UI/avatar";
 import RankingSkeleton from "@components/skeletons/rankingSkeleton";
 import { Button } from "@mui/material";
