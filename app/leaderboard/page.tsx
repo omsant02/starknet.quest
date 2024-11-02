@@ -31,7 +31,7 @@ import Divider from "@mui/material/Divider";
 import Blur from "@components/shapes/blur";
 import RankingsTable from "@components/leaderboard/RankingsTable";
 import { TOP_50_TAB_STRING } from "@constants/common";
-import { hexToDecimal } from "@utils/feltService";
+// import {  } from "@utils/feltService";
 import Avatar from "@components/UI/avatar";
 import RankingSkeleton from "@components/skeletons/rankingSkeleton";
 import { Button } from "@mui/material";
@@ -43,6 +43,7 @@ import {
   LeaderboardRankingParams,
   LeaderboardTopperParams,
 } from "../../types/backTypes";
+import { decimalToHex } from "@utils/feltService";
 
 
 export default function Page() {
@@ -140,7 +141,7 @@ export default function Page() {
 
   const fetchPageData = useCallback(async () => {
     const requestBody = {
-      addr: status === "connected" ? hexToDecimal(address || userAddress) : "",
+      addr: status === "connected" ? (address || userAddress) : "",
       page_size: 10,
       shift: 0,
       duration: timeFrameMap(duration),
@@ -259,7 +260,7 @@ export default function Page() {
     }
     if (!checkIfLastPage && viewMore) {
       const requestBody = {
-        addr: currentSearchedAddress || (userAddress ? hexToDecimal(userAddress) : ""),
+        addr: currentSearchedAddress || (userAddress ? (userAddress) : ""),
         page_size: rowsPerPage,
         shift: currentPage,
         duration: timeFrameMap(duration),
@@ -288,7 +289,7 @@ export default function Page() {
   */
   useEffect(() => {
     const requestBody = {
-      addr: currentSearchedAddress || (userAddress ? hexToDecimal(userAddress) : address || ""),
+      addr: currentSearchedAddress || (userAddress ? (userAddress) : address || ""),
       page_size: rowsPerPage,
       shift: 0,
       duration: timeFrameMap(duration),
@@ -313,7 +314,7 @@ export default function Page() {
   useEffect(() => {
     if (inititalFetchTop50 && address && duration !== TOP_50_TAB_STRING) {
       const requestBody = {
-         addr: currentSearchedAddress || (userAddress ? hexToDecimal(userAddress) : address || ""),
+         addr: currentSearchedAddress || (userAddress ? (userAddress) : address || ""),
         page_size: rowsPerPage,
         shift: 0,
         duration: timeFrameMap(duration),
@@ -433,7 +434,7 @@ export default function Page() {
                       <Avatar
                         address={
                           currentSearchedAddress.length > 0
-                            ? currentSearchedAddress
+                            ? decimalToHex(currentSearchedAddress)
                             : userAddress
                         }
                       />
@@ -524,7 +525,7 @@ export default function Page() {
                     selectedAddress={
                       currentSearchedAddress.length > 0
                         ? currentSearchedAddress
-                        : hexToDecimal(userAddress)
+                        : (userAddress)
                     }
                     searchedAddress={currentSearchedAddress}
                     leaderboardToppers={leaderboardToppers}
