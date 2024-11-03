@@ -34,7 +34,6 @@
     "jotai": "^2.5.0",
     "jwt-decode": "^4.0.0",
     "lottie-react": "^2.4.0",
-    "lucide-react": "^0.454.0",
     "maath": "^0.7.0",
     "mongodb": "^4.12.1",
     "next": "^14.0.1",
