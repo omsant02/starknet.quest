@@ -6,39 +6,41 @@ import React, {
   useState,
 } from "react";
 import styles from "@styles/dashboard.module.css";
-import CopyIcon from "@components/UI/iconsComponents/icons/copyIcon";
 import { CDNImage } from "@components/cdn/image";
-import { useStarkProfile,type Address } from "@starknet-react/core";
-import { minifyAddress } from "@utils/stringService";
+import { useStarkProfile, type Address } from "@starknet-react/core";
 import trophyIcon from "public/icons/trophy.svg";
 import xpIcon from "public/icons/xpBadge.svg";
 import useCreationDate from "@hooks/useCreationDate";
 import shareSrc from "public/icons/share.svg";
 import theme from "@styles/theme";
-import { Tooltip } from "@mui/material";
-import CopyAddress from "@components/UI/CopyAddress"; 
+import EyeIcon from "../iconsComponents/icons/eyeIcon";
 import ProfilIcon from "../iconsComponents/icons/profilIcon";
 import Link from "next/link";
 import SocialMediaActions from "../actions/socialmediaActions";
-import { getTweetLink, writeToClipboard } from "@utils/browserService";
+import { getTweetLink } from "@utils/browserService";
 import { hexToDecimal } from "@utils/feltService";
-import { Url } from "next/dist/shared/lib/router/router";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
 
-const ProfileCard: FunctionComponent<ProfileCard> = ({
+type ProfileCardProps = {
+  rankingData: RankingData;
+  identity: Identity;
+  leaderboardData: LeaderboardToppersData;
+  isOwner: boolean;
+};
+
+const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   rankingData,
   identity,
   leaderboardData,
-  addressOrDomain,
   isOwner,
 }) => {
-  const [copied, setCopied] = useState(false);
-  const sinceDate = useCreationDate(identity);
-  const formattedAddress = (identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`) as Address;
-  const { data: profileData } = useStarkProfile({ address: formattedAddress });
   const [userXp, setUserXp] = useState<number>();
-
+  const sinceDate = useCreationDate(identity);
+  const formattedAddress = (
+    identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`
+  ) as Address;
+  const { data: profileData } = useStarkProfile({ address: formattedAddress });
 
   const rankFormatter = useCallback((rank: number) => {
     if (rank > 10000) return "+10k";
@@ -54,7 +56,7 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
       leaderboardData &&
       leaderboardData?.total_users > 0
     ) {
-      const user = rankingData.ranking.find(
+      const user = rankingData?.ranking?.find(
         (user) => user.address === hexToDecimal(identity.owner)
       );
       if (user) {
@@ -65,81 +67,94 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
 
   useEffect(() => {
     computeData();
-  }, [rankingData, identity, leaderboardData]);
+  }, [computeData]);
 
-  const shareLink: Url = useMemo(() => {
+  const tweetShareLink: string = useMemo(() => {
     return `${getTweetLink(
       `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${
         window.location.href
       } #Starknet #StarknetID`
     )}`;
-  }, []);
+  }, [isOwner]);
 
   return (
     <div className={styles.dashboard_profile_card}>
       <div className={styles.left}>
         <div className={styles.profile_picture_div}>
           {profileData?.profilePicture ? (
-            <img src={profileData?.profilePicture} className="rounded-full" />
+            <img src={profileData.profilePicture} className="rounded-full" />
           ) : (
             <ProfilIcon width="120" color={theme.palette.secondary.main} />
           )}
         </div>
 
-          <div className="flex flex-col h-full justify-center">
-            <Typography type={TEXT_TYPE.BODY_SMALL} color="secondary" className={styles.accountCreationDate}>
-              {sinceDate ? `${sinceDate}` : ""}
-            </Typography>
-            <Typography type={TEXT_TYPE.H2} className={`${styles.profile_name} mt-2`}>{identity.domain.domain}</Typography>
-            <div className={styles.address_div}>
-            <CopyAddress
-                  address={identity?.owner ?? ""}
-                  iconSize="24"
-                  className={styles.copyButton}
-                  wallet={false}
-                />
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.addressText} color="secondary">
-                {minifyAddress(addressOrDomain ?? identity?.owner, 8)}
+        <div className="flex flex-col h-full justify-center">
+          <Typography
+            type={TEXT_TYPE.BODY_SMALL}
+            color="secondary"
+            className={styles.accountCreationDate}
+          >
+            {sinceDate ? `${sinceDate}` : ""}
+          </Typography>
+          <Typography
+            type={TEXT_TYPE.H2}
+            className={`${styles.profile_name} mt-2`}
+          >
+            {identity.domain?.domain || "Unknown Domain"}
+          </Typography>
+          <div className={styles.address_div}>
+            <div className="flex items-center gap-2">
+              <Typography
+                type={TEXT_TYPE.BODY_SMALL}
+                className={`${styles.wallet_amount} font-extrabold`}
+              >
+                $2,338.34
               </Typography>
+              <EyeIcon />
             </div>
-            <div className="flex sm:hidden justify-center py-4">
-              <SocialMediaActions identity={identity} />
-              <Link href={shareLink} target="_blank" rel="noreferrer">
+          </div>
+          <div className="flex sm:hidden justify-center py-4">
+            <SocialMediaActions identity={identity} />
+            {tweetShareLink && (
+              <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                 <div className={styles.right_share_button}>
                   <CDNImage
                     src={shareSrc}
                     width={20}
                     height={20}
-                    alt={"share-icon"}
+                    alt="share-icon"
                   />
                   <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
                 </div>
               </Link>
-            </div>
+            )}
           </div>
         </div>
-        <div className={styles.right}>
-          <div className="hidden sm:flex">
-            <div className={styles.right_top}>
-              <div className={styles.right_socials}>
-                <SocialMediaActions identity={identity} />
-                <Link href={shareLink} target="_blank" rel="noreferrer">
+      </div>
+      <div className={styles.right}>
+        <div className="hidden sm:flex">
+          <div className={styles.right_top}>
+            <div className={styles.right_socials}>
+              <SocialMediaActions identity={identity} />
+              {tweetShareLink && (
+                <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                   <div className={styles.right_share_button}>
                     <CDNImage
                       src={shareSrc}
                       width={20}
                       height={20}
-                      alt={"share-icon"}
+                      alt="share-icon"
                     />
                     <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
                   </div>
                 </Link>
-              </div>
+              )}
             </div>
           </div>
+        </div>
 
         <div className={styles.right_bottom}>
-          {leaderboardData && leaderboardData?.total_users > 0 ? (
+          {leaderboardData && leaderboardData.total_users > 0 && (
             <div className={styles.right_bottom_content}>
               <CDNImage
                 src={trophyIcon}
@@ -152,13 +167,13 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
                 type={TEXT_TYPE.BODY_SMALL}
                 className={styles.statsText}
               >
-                {leaderboardData?.position
-                  ? rankFormatter(leaderboardData?.position)
+                {leaderboardData.position
+                  ? rankFormatter(leaderboardData.position)
                   : "NA"}
               </Typography>
             </div>
-          ) : null}
-          {userXp !== undefined ? (
+          )}
+          {userXp !== undefined && (
             <div className={styles.right_bottom_content}>
               <CDNImage
                 src={xpIcon}
@@ -174,7 +189,7 @@ const ProfileCard: FunctionComponent<ProfileCard> = ({
                 {userXp ?? "0"}
               </Typography>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
