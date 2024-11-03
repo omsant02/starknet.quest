@@ -72,14 +72,10 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     computeData();
   }, [computeData]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setShareLink(
-        getTweetLink(
-          `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
-        )
-      );
-    }
+  const shareLink: Url = useMemo(() => {
+    return `${getTweetLink(
+      `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
+    )}`;
   }, [isOwner]);
 
   return (
