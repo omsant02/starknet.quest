@@ -18,7 +18,13 @@ import ProfileCardSkeleton from "@components/skeletons/profileCardSkeleton";
 import { getDataFromId } from "@services/starknetIdService";
 import { usePathname, useRouter } from "next/navigation";
 import ErrorScreen from "@components/UI/screens/errorScreen";
-import { ArgentDappMap, ArgentTokenMap, ArgentUserDapp, ArgentUserToken, CompletedQuests } from "../../types/backTypes";
+import {
+  ArgentDappMap,
+  ArgentTokenMap,
+  ArgentUserDapp,
+  ArgentUserToken,
+  CompletedQuests,
+} from "../../types/backTypes";
 import QuestSkeleton from "@components/skeletons/questsSkeleton";
 import QuestCardCustomised from "@components/dashboard/CustomisedQuestCard";
 import QuestStyles from "@styles/Home.module.css";
@@ -33,7 +39,13 @@ import { CustomTabPanel } from "@components/UI/tabs/customTab";
 import SuggestedQuests from "@components/dashboard/SuggestedQuests";
 import PortfolioSummary from "@components/dashboard/PortfolioSummary";
 import { useNotification } from "@context/NotificationProvider";
-import { calculateTokenPrice, fetchDapps, fetchTokens, fetchUserDapps, fetchUserTokens } from "@services/argentPortfolioService";
+import {
+  calculateTokenPrice,
+  fetchDapps,
+  fetchTokens,
+  fetchUserDapps,
+  fetchUserTokens,
+} from "@services/argentPortfolioService";
 import PortfolioSummarySkeleton from "@components/skeletons/portfolioSummarySkeleton";
 
 type AddressOrDomainProps = {
@@ -43,15 +55,15 @@ type AddressOrDomainProps = {
 };
 
 type ChartItemMap = {
-  [dappId: string]: ChartItem
+  [dappId: string]: ChartItem;
 };
 
 type DebtStatus = {
   hasDebt: boolean;
-  tokens: { 
-    dappId: string, 
-    tokenAddress: string, 
-    tokenBalance: number 
+  tokens: {
+    dappId: string;
+    tokenAddress: string;
+    tokenBalance: number;
   }[];
 };
 
@@ -190,30 +202,59 @@ export default function Page({ params }: AddressOrDomainProps) {
   }, []);
 
   const fetchPortfolioAssets = useCallback(async (addr: string) => {
-
     // TODO: Implement fetch from Argent API
     const assets = [
-      { color: "#1E2097", itemLabel: "USDC", itemValue: "46.68", itemValueSymbol: "%" },
-      { color: "#637DEB", itemLabel: "USDT", itemValue: "27.94", itemValueSymbol: "%" },
-      { color: "#2775CA", itemLabel: "STRK", itemValue: "22.78", itemValueSymbol: "%" },
-      { color: "#5CE3FE", itemLabel: "ETH", itemValue: "0.36", itemValueSymbol: "%" },
-      { color: "#F4FAFF", itemLabel: "Others", itemValue: "2.36", itemValueSymbol: "%" },
+      {
+        color: "#1E2097",
+        itemLabel: "USDC",
+        itemValue: "46.68",
+        itemValueSymbol: "%",
+      },
+      {
+        color: "#637DEB",
+        itemLabel: "USDT",
+        itemValue: "27.94",
+        itemValueSymbol: "%",
+      },
+      {
+        color: "#2775CA",
+        itemLabel: "STRK",
+        itemValue: "22.78",
+        itemValueSymbol: "%",
+      },
+      {
+        color: "#5CE3FE",
+        itemLabel: "ETH",
+        itemValue: "0.36",
+        itemValueSymbol: "%",
+      },
+      {
+        color: "#F4FAFF",
+        itemLabel: "Others",
+        itemValue: "2.36",
+        itemValueSymbol: "%",
+      },
     ];
     setPortfolioAssets(assets);
-
   }, []);
 
   const userHasDebt = (userDapps: ArgentUserDapp[]) => {
     let debt: DebtStatus = { hasDebt: false, tokens: [] };
 
     for (const dapp of userDapps) {
-      if (!dapp.products[0]) { continue; }
+      if (!dapp.products[0]) {
+        continue;
+      }
       for (const position of dapp.products[0].positions) {
         for (const tokenAddress of Object.keys(position.totalBalances)) {
           const tokenBalance = Number(position.totalBalances[tokenAddress]);
           if (tokenBalance < 0) {
             debt.hasDebt = true;
-            debt.tokens.push({dappId: dapp.dappId, tokenAddress, tokenBalance});
+            debt.tokens.push({
+              dappId: dapp.dappId,
+              tokenAddress,
+              tokenBalance,
+            });
           }
         }
       }
@@ -221,16 +262,24 @@ export default function Page({ params }: AddressOrDomainProps) {
     return debt;
   };
 
-  const handleDebt = async (protocolsMap: ChartItemMap, userDapps: ArgentUserDapp[], tokens: ArgentTokenMap) => {
+  const handleDebt = async (
+    protocolsMap: ChartItemMap,
+    userDapps: ArgentUserDapp[],
+    tokens: ArgentTokenMap
+  ) => {
     const debtStatus = userHasDebt(userDapps);
-    if (!debtStatus || !debtStatus.hasDebt) { return; }
+    if (!debtStatus || !debtStatus.hasDebt) {
+      return;
+    }
 
     for await (const debt of debtStatus.tokens) {
       let value = Number(protocolsMap[debt.dappId].itemValue);
       value += await calculateTokenPrice(
         debt.tokenAddress,
-        tokenToDecimal(debt.tokenBalance.toString(), 
-        tokens[debt.tokenAddress].decimals), 
+        tokenToDecimal(
+          debt.tokenBalance.toString(),
+          tokens[debt.tokenAddress].decimals
+        ),
         "USD"
       );
 
@@ -238,15 +287,26 @@ export default function Page({ params }: AddressOrDomainProps) {
     }
   };
 
-  const getProtocolsFromTokens = async (protocolsMap: ChartItemMap, userTokens: ArgentUserToken[], tokens: ArgentTokenMap, dapps: ArgentDappMap) => {
+  const getProtocolsFromTokens = async (
+    protocolsMap: ChartItemMap,
+    userTokens: ArgentUserToken[],
+    tokens: ArgentTokenMap,
+    dapps: ArgentDappMap
+  ) => {
     for await (const token of userTokens) {
       const tokenInfo = tokens[token.tokenAddress];
       if (tokenInfo.dappId && token.tokenBalance != "0") {
         let itemValue = 0;
-        const currentTokenBalance = await calculateTokenPrice(token.tokenAddress, tokenToDecimal(token.tokenBalance, tokenInfo.decimals), "USD");
-        
+        const currentTokenBalance = await calculateTokenPrice(
+          token.tokenAddress,
+          tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
+          "USD"
+        );
+
         if (protocolsMap[tokenInfo.dappId]?.itemValue) {
-          itemValue = Number(protocolsMap[tokenInfo.dappId].itemValue) + currentTokenBalance;
+          itemValue =
+            Number(protocolsMap[tokenInfo.dappId].itemValue) +
+            currentTokenBalance;
         } else {
           itemValue = currentTokenBalance;
         }
@@ -255,23 +315,35 @@ export default function Page({ params }: AddressOrDomainProps) {
           color: "",
           itemLabel: dapps[tokenInfo.dappId].name,
           itemValueSymbol: "$",
-          itemValue: itemValue.toFixed(2)
-        }
+          itemValue: itemValue.toFixed(2),
+        };
       }
     }
-  }
+  };
 
-  const getProtocolsFromDapps = async (protocolsMap: ChartItemMap, userDapps: ArgentUserDapp[], tokens: ArgentTokenMap, dapps: ArgentDappMap) => {
+  const getProtocolsFromDapps = async (
+    protocolsMap: ChartItemMap,
+    userDapps: ArgentUserDapp[],
+    tokens: ArgentTokenMap,
+    dapps: ArgentDappMap
+  ) => {
     for await (const userDapp of userDapps) {
-      if (protocolsMap[userDapp.dappId]) { continue; } // Ignore entry if already present in the map
+      if (protocolsMap[userDapp.dappId]) {
+        continue;
+      } // Ignore entry if already present in the map
 
       let protocolBalance = 0;
-      if (!userDapp.products[0]) { return; }
+      if (!userDapp.products[0]) {
+        return;
+      }
       for await (const position of userDapp.products[0].positions) {
         for await (const tokenAddress of Object.keys(position.totalBalances)) {
           protocolBalance += await calculateTokenPrice(
-            tokenAddress, 
-            tokenToDecimal(position.totalBalances[tokenAddress], tokens[tokenAddress].decimals),
+            tokenAddress,
+            tokenToDecimal(
+              position.totalBalances[tokenAddress],
+              tokens[tokenAddress].decimals
+            ),
             "USD"
           );
         }
@@ -281,25 +353,35 @@ export default function Page({ params }: AddressOrDomainProps) {
         color: "",
         itemLabel: dapps[userDapp.dappId].name,
         itemValueSymbol: "$",
-        itemValue: protocolBalance.toFixed(2)
-      }
+        itemValue: protocolBalance.toFixed(2),
+      };
     }
-  }
+  };
 
   const sortProtocols = (protocolsMap: ChartItemMap) => {
-    return Object.values(protocolsMap).sort((a, b) => parseFloat(b.itemValue) - parseFloat(a.itemValue));
-  }
+    return Object.values(protocolsMap).sort(
+      (a, b) => parseFloat(b.itemValue) - parseFloat(a.itemValue)
+    );
+  };
 
   const handleExtraProtocols = (sortedProtocols: ChartItem[]) => {
-    let otherProtocols = sortedProtocols.length > 5 ? sortedProtocols.splice(4) : [];
-    if (otherProtocols.length === 0) { return;}
+    let otherProtocols =
+      sortedProtocols.length > 5 ? sortedProtocols.splice(4) : [];
+    if (otherProtocols.length === 0) {
+      return;
+    }
     sortedProtocols.push({
       itemLabel: "Others",
-      itemValue: otherProtocols.reduce((valueSum, protocol) => valueSum + Number(protocol.itemValue), 0).toFixed(2),
+      itemValue: otherProtocols
+        .reduce(
+          (valueSum, protocol) => valueSum + Number(protocol.itemValue),
+          0
+        )
+        .toFixed(2),
       itemValueSymbol: "$",
-      color: ""
+      color: "",
     });
-  }
+  };
 
   const assignProtocolColors = (sortedProtocols: ChartItem[]) => {
     const portfolioProtocolColors = [
@@ -307,12 +389,12 @@ export default function Page({ params }: AddressOrDomainProps) {
       "#23F51F",
       "#DEFE5C",
       "#9EFABB",
-      "#F4FAFF"
+      "#F4FAFF",
     ];
     sortedProtocols.forEach((protocol, index) => {
       protocol.color = portfolioProtocolColors[index];
     });
-  }
+  };
 
   const fetchPortfolioProtocols = useCallback(async (addr: string) => {
     let dapps: ArgentDappMap = {};
@@ -326,7 +408,7 @@ export default function Page({ params }: AddressOrDomainProps) {
         fetchDapps(),
         fetchTokens(),
         fetchUserTokens(addr),
-        fetchUserDapps(addr)
+        fetchUserDapps(addr),
       ]);
     } catch (error) {
       showNotification("Error while fetching address portfolio", "error");
@@ -344,10 +426,13 @@ export default function Page({ params }: AddressOrDomainProps) {
       let sortedProtocols = sortProtocols(protocolsMap);
       handleExtraProtocols(sortedProtocols);
       assignProtocolColors(sortedProtocols);
-      
+
       setPortfolioProtocols(sortedProtocols);
     } catch (error) {
-      showNotification("Error while calculating address portfolio stats", "error");
+      showNotification(
+        "Error while calculating address portfolio stats",
+        "error"
+      );
       console.log("Error while calculating address portfolio stats", error);
     }
 
@@ -503,7 +588,6 @@ export default function Page({ params }: AddressOrDomainProps) {
         {initProfile && identity ? (
           <ProfileCard
             identity={identity}
-            addressOrDomain={addressOrDomain}
             rankingData={userRanking}
             leaderboardData={leaderboardData}
             isOwner={isOwner}
@@ -518,20 +602,26 @@ export default function Page({ params }: AddressOrDomainProps) {
         {loadingProtocols ? ( // Change for corresponding state
           <PortfolioSummarySkeleton />
         ) : (
-          <PortfolioSummary 
-            title="Portfolio by assets type" 
+          <PortfolioSummary
+            title="Portfolio by assets type"
             data={portfolioAssets}
-            totalBalance={portfolioAssets.reduce((sum, item) => sum + Number(item.itemValue), 0)}
+            totalBalance={portfolioAssets.reduce(
+              (sum, item) => sum + Number(item.itemValue),
+              0
+            )}
             isProtocol={false}
           />
         )}
         {loadingProtocols ? (
           <PortfolioSummarySkeleton />
         ) : (
-          <PortfolioSummary 
-            title="Portfolio by protocol usage" 
-            data={portfolioProtocols} 
-            totalBalance={portfolioProtocols.reduce((sum, item) => sum + Number(item.itemValue), 0)}
+          <PortfolioSummary
+            title="Portfolio by protocol usage"
+            data={portfolioProtocols}
+            totalBalance={portfolioProtocols.reduce(
+              (sum, item) => sum + Number(item.itemValue),
+              0
+            )}
             isProtocol={true}
           />
         )}
@@ -587,9 +677,13 @@ export default function Page({ params }: AddressOrDomainProps) {
             {questsLoading ? (
               <QuestSkeleton />
             ) : completedQuests?.length === 0 ? (
-              isOwner
-                ? <SuggestedQuests />
-                : <Typography type={TEXT_TYPE.H2} className={styles.noBoosts}>User has not completed any quests at the moment</Typography>
+              isOwner ? (
+                <SuggestedQuests />
+              ) : (
+                <Typography type={TEXT_TYPE.H2} className={styles.noBoosts}>
+                  User has not completed any quests at the moment
+                </Typography>
+              )
             ) : (
               <section className={QuestStyles.section}>
                 <div className={QuestStyles.questContainer}>

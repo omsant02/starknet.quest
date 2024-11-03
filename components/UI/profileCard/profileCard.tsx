@@ -6,10 +6,8 @@ import React, {
   useState,
 } from "react";
 import styles from "@styles/dashboard.module.css";
-import CopyIcon from "@components/UI/iconsComponents/icons/copyIcon";
 import { CDNImage } from "@components/cdn/image";
 import { useStarkProfile, type Address } from "@starknet-react/core";
-import { minifyAddress } from "@utils/stringService";
 import trophyIcon from "public/icons/trophy.svg";
 import xpIcon from "public/icons/xpBadge.svg";
 import useCreationDate from "@hooks/useCreationDate";
@@ -28,7 +26,6 @@ type ProfileCardProps = {
   rankingData: RankingData;
   identity: Identity;
   leaderboardData: LeaderboardToppersData;
-  addressOrDomain: string;
   isOwner: boolean;
 };
 
@@ -36,12 +33,13 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   rankingData,
   identity,
   leaderboardData,
-  addressOrDomain,
   isOwner,
 }) => {
   const [userXp, setUserXp] = useState<number>();
   const sinceDate = useCreationDate(identity);
-  const formattedAddress = (identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`) as Address;
+  const formattedAddress = (
+    identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`
+  ) as Address;
   const { data: profileData } = useStarkProfile({ address: formattedAddress });
 
   const rankFormatter = useCallback((rank: number) => {
@@ -71,9 +69,11 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     computeData();
   }, [computeData]);
 
-    const tweetShareLink: string = useMemo(() => {
+  const tweetShareLink: string = useMemo(() => {
     return `${getTweetLink(
-      `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
+      `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${
+        window.location.href
+      } #Starknet #StarknetID`
     )}`;
   }, [isOwner]);
 
@@ -89,15 +89,25 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
         </div>
 
         <div className="flex flex-col h-full justify-center">
-          <Typography type={TEXT_TYPE.BODY_SMALL} color="secondary" className={styles.accountCreationDate}>
+          <Typography
+            type={TEXT_TYPE.BODY_SMALL}
+            color="secondary"
+            className={styles.accountCreationDate}
+          >
             {sinceDate ? `${sinceDate}` : ""}
           </Typography>
-          <Typography type={TEXT_TYPE.H2} className={`${styles.profile_name} mt-2`}>
+          <Typography
+            type={TEXT_TYPE.H2}
+            className={`${styles.profile_name} mt-2`}
+          >
             {identity.domain?.domain || "Unknown Domain"}
           </Typography>
           <div className={styles.address_div}>
             <div className="flex items-center gap-2">
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={`${styles.wallet_amount} font-extrabold`}>
+              <Typography
+                type={TEXT_TYPE.BODY_SMALL}
+                className={`${styles.wallet_amount} font-extrabold`}
+              >
                 $2,338.34
               </Typography>
               <EyeIcon />
@@ -108,7 +118,12 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
             {tweetShareLink && (
               <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                 <div className={styles.right_share_button}>
-                  <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
+                  <CDNImage
+                    src={shareSrc}
+                    width={20}
+                    height={20}
+                    alt="share-icon"
+                  />
                   <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
                 </div>
               </Link>
@@ -124,7 +139,12 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
               {tweetShareLink && (
                 <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                   <div className={styles.right_share_button}>
-                    <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
+                    <CDNImage
+                      src={shareSrc}
+                      width={20}
+                      height={20}
+                      alt="share-icon"
+                    />
                     <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
                   </div>
                 </Link>
@@ -136,8 +156,17 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
         <div className={styles.right_bottom}>
           {leaderboardData && leaderboardData.total_users > 0 && (
             <div className={styles.right_bottom_content}>
-              <CDNImage src={trophyIcon} priority width={25} height={25} alt="trophy icon" />
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.statsText}>
+              <CDNImage
+                src={trophyIcon}
+                priority
+                width={25}
+                height={25}
+                alt="trophy icon"
+              />
+              <Typography
+                type={TEXT_TYPE.BODY_SMALL}
+                className={styles.statsText}
+              >
                 {leaderboardData.position
                   ? rankFormatter(leaderboardData.position)
                   : "NA"}
@@ -146,8 +175,17 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
           )}
           {userXp !== undefined && (
             <div className={styles.right_bottom_content}>
-              <CDNImage src={xpIcon} priority width={30} height={30} alt="xp badge" />
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.statsText}>
+              <CDNImage
+                src={xpIcon}
+                priority
+                width={30}
+                height={30}
+                alt="xp badge"
+              />
+              <Typography
+                type={TEXT_TYPE.BODY_SMALL}
+                className={styles.statsText}
+              >
                 {userXp ?? "0"}
               </Typography>
             </div>
