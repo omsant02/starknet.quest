@@ -46,11 +46,11 @@ export const availableConnectors = [
         ? "https://web.hydrogen.argent47.net"
         : "https://web.argent.xyz/",
   }),
-  new ArgentMobileConnector({
-    dappName: "Starknet Quest",
+   ArgentMobileConnector.init({
+   options: {dappName: "Starknet Quest",
     url: process.env.NEXT_PUBLIC_APP_LINK as string,
     chainId: constants.NetworkName.SN_MAIN,
-    icons: ["https://starknet.quest/visuals/starknetquestLogo.svg"],
+    icons: ["https://starknet.quest/visuals/starknetquestLogo.svg"],}
   }),
 
   new InjectedConnector({ options: { id: "keplr", name: "Keplr" } }),
