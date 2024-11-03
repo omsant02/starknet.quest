@@ -27,7 +27,7 @@ import Typography from "../typography/typography";
 type ProfileCardProps = {
   rankingData: RankingData;
   identity: Identity;
-  leaderboardData: leaderboardData;
+  leaderboardData: LeaderboardToppersData;
   addressOrDomain: string;
   isOwner: boolean;
 };
