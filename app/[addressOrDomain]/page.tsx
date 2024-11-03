@@ -18,7 +18,7 @@ import ProfileCardSkeleton from "@components/skeletons/profileCardSkeleton";
 import { getDataFromId } from "@services/starknetIdService";
 import { usePathname, useRouter } from "next/navigation";
 import ErrorScreen from "@components/UI/screens/errorScreen";
-import { ArgentDappMap, ArgentTokenMap, ArgentUserDapp, ArgentUserToken, CompletedQuests } from "../../types/backTypes";
+import { ArgentDappMap, ArgentToken, ArgentTokenMap, ArgentUserDapp, ArgentUserToken, CompletedQuests } from "../../types/backTypes";
 import QuestSkeleton from "@components/skeletons/questsSkeleton";
 import QuestCardCustomised from "@components/dashboard/CustomisedQuestCard";
 import QuestStyles from "@styles/Home.module.css";
@@ -54,14 +54,6 @@ type DebtStatus = {
     tokenBalance: number 
   }[];
 };
-
-// Protocols to exclude from asset percentages
-const EXCLUDED_PROTOCOL_IDS = [
-  '8e4c3af5-f9bc-4646-9b66-3cd7bf7c8aec',  // zkLend
-  '19a6474c-17a9-4d61-95ab-5f768cd01485',  // Nimbora
-  '6203cd68-991a-4bae-a18a-ff42207ce813',  // Vesu
-  // TODO: Add more protocols or add better exclusion logic (ban all protocols?)
-];
 
 export default function Page({ params }: AddressOrDomainProps) {
   const router = useRouter();
@@ -213,18 +205,8 @@ export default function Page({ params }: AddressOrDomainProps) {
       const tokenInfo = tokens[token.tokenAddress];
       if (!tokenInfo || token.tokenBalance === "0") continue;
 
-      console.log(tokenInfo);
-
+      // Skip protocol tokens (like LPT pair tokens, staking, etc.)
       if (tokenInfo.dappId) {
-        console.log('Dapp info for token', tokenInfo.name, {
-          dappName: dapps[tokenInfo.dappId]?.name,
-          dappId: tokenInfo.dappId,
-          dappDetails: dapps[tokenInfo.dappId]
-        });
-      }
-
-      // Skip tokens from excluded protocols
-      if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
         continue;
       }
 
@@ -237,7 +219,6 @@ export default function Page({ params }: AddressOrDomainProps) {
       // Add to total value regardless of protocol
       totalValue += value;
       totalTokenValue += value;
-      console.log('Added token value:', value, 'from token:', tokenInfo.symbol);
 
       // Only add to asset breakdown if not from excluded protocol
       const symbol = tokenInfo.symbol || "Unknown";
@@ -269,9 +250,8 @@ export default function Page({ params }: AddressOrDomainProps) {
           if (value < 0) continue;
           // Add to total value regardless of protocol
           totalValue += value;
-          console.log('Added protocol value:', value, 'from token:', tokenInfo.symbol, 'protocol:', dapps[userDapp.dappId].name);
-          // Only add to asset breakdown if not from excluded protocol. Restaking anyone?
-          if (tokenInfo.dappId && EXCLUDED_PROTOCOL_IDS.includes(tokenInfo.dappId)) {
+          // Only add to asset breakdown if the token is not from a protocol itself
+          if (tokenInfo.dappId) {
             continue;
           }
           const symbol = tokenInfo.symbol || "Unknown";
@@ -279,8 +259,6 @@ export default function Page({ params }: AddressOrDomainProps) {
         }
       }
     }
-
-    console.log("!!!Total value:", totalValue, "Total token value:", totalTokenValue, "Total protocol value:", totalProtocolValue);
 
     // Convert to percentages and format
     const sortedAssets = Object.entries(assetValues)
@@ -291,9 +269,6 @@ export default function Page({ params }: AddressOrDomainProps) {
         itemValueSymbol: "%",
         color: "" // Colors will be assigned later
       }));
-
-    console.log(JSON.stringify(sortedAssets, null, 2));
-    console.log(sortedAssets.slice());
 
     // Handle "Others" category if needed
     if (sortedAssets.length > 4) {
@@ -478,12 +453,14 @@ export default function Page({ params }: AddressOrDomainProps) {
   const fetchPortfolioData = useCallback(async (addr: string) => {
     setLoadingProtocols(true);
     try {
+      // Argent API requires lowercase address
+      const normalizedAddr = addr.toLowerCase();
       const [dappsData, tokensData, userTokensData, userDappsData] =
         await Promise.all([
           fetchDapps(),
           fetchTokens(),
-          fetchUserTokens(addr),
-          fetchUserDapps(addr),
+          fetchUserTokens(normalizedAddr),
+          fetchUserDapps(normalizedAddr),
         ]);
 
       const data = {
@@ -507,7 +484,6 @@ export default function Page({ params }: AddressOrDomainProps) {
 
   useEffect(() => {
     if (!identity) return;
-    console.log("Fetching data for identity", identity.owner);
     fetchQuestData(identity.owner);
     fetchPageData(identity.owner);
     fetchPortfolioData(identity.owner);

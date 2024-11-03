@@ -56,7 +56,15 @@ export const calculateTokenPrice = async (
   tokenAmount: string,
   currency: "USD" | "EUR" | "GBP" = "USD"
 ) => {
-  const data = await fetchData<ArgentTokenValue>(`${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`);
+  let data: ArgentTokenValue;
+  try {
+    data = await fetchData<ArgentTokenValue>(`${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`);
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('Error 404:')) {
+      return 0;
+    }
+    throw err;
+  }
   try {
     return Number(tokenAmount) * Number(data.ccyValue);
   } catch (err) {
