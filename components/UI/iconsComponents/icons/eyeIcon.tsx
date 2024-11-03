@@ -5,7 +5,10 @@ interface IconProps {
   width?: number;
 }
 
-const EyeIcon: FunctionComponent<IconProps> = ({ color = "#E1DCEA", width = 17 }) => {
+const EyeIcon: FunctionComponent<IconProps> = ({
+  color = "#E1DCEA",
+  width = 17,
+}) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
