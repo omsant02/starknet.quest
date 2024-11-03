@@ -506,6 +506,8 @@ export default function Page({ params }: AddressOrDomainProps) {
     userTokens: ArgentUserToken[], 
     userDapps: ArgentUserDapp[]
   }) => {
+    const { dapps, tokens, userTokens, userDapps } = data;
+
     if (!dapps || !tokens || (!userTokens && !userDapps)) return;
     let protocolsMap: ChartItemMap = {};
 
