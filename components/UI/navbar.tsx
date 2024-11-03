@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, FunctionComponent } from "react";
 import styles from "@styles/components/navbar.module.css";
 import Button from "./button";
-import { useConnect, useAccount, useDisconnect } from "@starknet-react/core";
+import { useConnect, useAccount, useDisconnect, Connector } from "@starknet-react/core";
 import ModalMessage from "./modalMessage";
 import { useDisplayName } from "@hooks/displayName.tsx";
 import { constants } from "starknet";
@@ -54,7 +54,7 @@ const Navbar: FunctionComponent = () => {
     },
   ]);
   const { starknetkitConnectModal } = useStarknetkitConnectModal({
-    connectors: availableConnectors,
+    connectors: availableConnectors as any,
   });
 
   const fetchAndUpdateNotifications = async () => {
@@ -94,7 +94,7 @@ const Navbar: FunctionComponent = () => {
         const connector = availableConnectors.find(
           (item) => item.id === connectordId
         );
-        await connectAsync({ connector });
+        await connectAsync({ connector: connector as Connector });
       }
     };
     connectToStarknet();
@@ -121,7 +121,7 @@ const Navbar: FunctionComponent = () => {
     if (!connector) {
       return;
     }
-    await connectAsync({ connector });
+    await connectAsync({ connector: connector as Connector });
     localStorage.setItem("SQ-connectedWallet", connector.id);
   };
 
