@@ -60,7 +60,7 @@ export const calculateTokenPrice = async (
   try {
     data = await fetchData<ArgentTokenValue>(`${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`);
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('Error 404:')) {
+    if (err instanceof Error && err.message.includes('No price for token')) {
       return 0;
     }
     throw err;
