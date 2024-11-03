@@ -208,70 +208,87 @@ export default function Page({ params }: AddressOrDomainProps) {
     userDapps: ArgentUserDapp[],
   ) => {
     let totalValue = 0;
-    let totalTokenValue = 0;
-    let totalProtocolValue = 0;
     const assetValues: { [symbol: string]: number } = {};
 
-    // First pass: calculate total value and individual token values
-    for await (const token of userTokens) {
+    // Process user tokens in parallel
+    const userTokenPromises = userTokens.map(async (token) => {
       const tokenInfo = tokens[token.tokenAddress];
-      if (!tokenInfo || token.tokenBalance === "0") continue;
+      if (!tokenInfo || token.tokenBalance === "0") return null;
 
       // Skip protocol tokens (like LPT pair tokens, staking, etc.)
       if (tokenInfo.dappId) {
-        continue;
+        return null;
       }
 
+      try {
       const value = await calculateTokenPrice(
         token.tokenAddress,
         tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
         "USD"
-      );
-
-      // Add to total value regardless of protocol
-      totalValue += value;
-      totalTokenValue += value;
-
-      // Only add to asset breakdown if not from excluded protocol
-      const symbol = tokenInfo.symbol || "Unknown";
-      assetValues[symbol] = (assetValues[symbol] || 0) + value;
-    }
-
-    // Process tokens from userDapps
-    for await (const userDapp of userDapps) {
-      const positions = userDapp.products[0]?.positions;
-      if (!positions) continue;
-
-      for (const position of positions) {
-        const totalBalances = position.totalBalances;
-        for (const tokenAddress of Object.keys(totalBalances)) {
-          const tokenBalance = totalBalances[tokenAddress];
-          const tokenInfo = tokens[tokenAddress];
-          if (!tokenInfo) continue;
-          if (tokenBalance === "0") continue;
-
-          const value = await calculateTokenPrice(
-            tokenAddress,
-            tokenToDecimal(tokenBalance, tokenInfo.decimals),
-            "USD"
-          );
-
-          totalProtocolValue += value;
-
-          // Don't add negative balances to total value (or may have percentages > 100%)
-          if (value < 0) continue;
-          // Add to total value regardless of protocol
-          totalValue += value;
-          // Only add to asset breakdown if the token is not from a protocol itself
-          if (tokenInfo.dappId) {
-            continue;
-          }
-          const symbol = tokenInfo.symbol || "Unknown";
-          assetValues[symbol] = (assetValues[symbol] || 0) + value;
-        }
+        );
+        return {
+          value,
+          symbol: tokenInfo.symbol || "Unknown",
+          isProtocolToken: !!tokenInfo.dappId
+        };
+      } catch (err) {
+        console.log(`Error calculating price for token ${token.tokenAddress}:`, err);
+        return null;
       }
-    }
+    });
 
+    // Flatten userDapps into an array of token balances
+    const dappBalances = userDapps.flatMap(dapp =>
+      dapp.products[0]?.positions.flatMap(position =>
+        Object.entries(position.totalBalances).map(([tokenAddress, balance]) => ({
+          tokenAddress,
+          balance,
+          dappId: dapp.dappId
+        }))
+      ) ?? []
+    );
+
+    // Process all balances in parallel
+    const balancePromises = dappBalances.map(async ({ tokenAddress, balance, dappId }) => {
+      const tokenInfo = tokens[tokenAddress];
+      if (!tokenInfo || balance === "0") return null;
+
+      try {
+        const value = await calculateTokenPrice(
+          tokenAddress,
+          tokenToDecimal(balance, tokenInfo.decimals),
+          "USD"
+        );
+
+        return {
+          value,
+          symbol: tokenInfo.symbol || "Unknown",
+          isProtocolToken: !!tokenInfo.dappId,
+        };
+      } catch (err) {
+        console.log(`Error calculating price for token ${tokenAddress}:`, err);
+        return null;
+      }
+    });
+
+    // Process results
+    const results = (await Promise.all([
+      ...balancePromises,
+      ...userTokenPromises
+    ])).filter(Boolean);
+
+    results.forEach(result => {
+      if (!result) return;
+      const { value, symbol, isProtocolToken } = result;
+
+      if (value < 0) return; // Skip negative balances
+
+      totalValue += value;
+
+      if (!isProtocolToken) {
+        assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      }
+    });
     // Convert to percentages and format
     const sortedAssets = Object.entries(assetValues)
       .sort(([, a], [, b]) => b - a)
@@ -300,9 +317,8 @@ export default function Page({ params }: AddressOrDomainProps) {
     // Assign colors
     const colors = ["#1E2097", "#637DEB", "#2775CA", "#5CE3FE", "#F4FAFF"];
     sortedAssets.forEach((asset, index) => {
-      asset.color = colors[index];
+      asset.color = colors[index % colors.length]; // Use modulo to recycle colors if needed
     });
-
     return sortedAssets;
   };
 
@@ -314,8 +330,10 @@ export default function Page({ params }: AddressOrDomainProps) {
   }) => {
     const { dapps, tokens, userTokens, userDapps } = data;
     try {
-      // TODO: correct this condition
-      if (!tokens || !userTokens) return;
+      if (!tokens || !userTokens || !dapps || !userDapps) {
+        console.warn('Missing required data for portfolio calculation');
+        return;
+      }
       const assets = await calculateAssetPercentages(userTokens, tokens, dapps, userDapps);
       setPortfolioAssets(assets);
     } catch (error) {
