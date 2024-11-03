@@ -40,7 +40,6 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   isOwner,
 }) => {
   const [userXp, setUserXp] = useState<number>();
-  const [shareLink, setShareLink] = useState<string>("");
   const sinceDate = useCreationDate(identity);
   const formattedAddress = (identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`) as Address;
   const { data: profileData } = useStarkProfile({ address: formattedAddress });
@@ -72,7 +71,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     computeData();
   }, [computeData]);
 
-  const shareLink: Url = useMemo(() => {
+    const tweetShareLink: string = useMemo(() => {
     return `${getTweetLink(
       `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
     )}`;
@@ -106,8 +105,8 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
           </div>
           <div className="flex sm:hidden justify-center py-4">
             <SocialMediaActions identity={identity} />
-            {shareLink && (
-              <Link href={shareLink} target="_blank" rel="noreferrer">
+            {tweetShareLink && (
+              <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                 <div className={styles.right_share_button}>
                   <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
                   <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
@@ -122,8 +121,8 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
           <div className={styles.right_top}>
             <div className={styles.right_socials}>
               <SocialMediaActions identity={identity} />
-              {shareLink && (
-                <Link href={shareLink} target="_blank" rel="noreferrer">
+              {tweetShareLink && (
+                <Link href={tweetShareLink} target="_blank" rel="noreferrer">
                   <div className={styles.right_share_button}>
                     <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
                     <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
