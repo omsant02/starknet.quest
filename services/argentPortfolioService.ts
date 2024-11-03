@@ -64,3 +64,32 @@ export const calculateTokenPrice = async (
     throw err;
   }
 };
+
+export const calculateTotalBalance = async (
+  walletAddress: string,
+  currency: "USD" | "EUR" | "GBP" = "USD"
+): Promise<number> => {
+  try {
+    const tokens = await fetchUserTokens(walletAddress); // Fetch all tokens in wallet
+    let totalBalance = 0;
+
+    for (const token of tokens) {
+      try {
+        // Calculate the price of each token and add it to the total balance
+        const tokenValue = await calculateTokenPrice(
+          token.tokenAddress,
+          token.tokenBalance,
+          currency
+        );
+        totalBalance += tokenValue;
+      } catch (err) {
+        console.error(`Error calculating price for token ${token.tokenAddress}:`, err);
+      }
+    }
+
+    return totalBalance;
+  } catch (err) {
+    console.error("Error calculating total balance:", err);
+    throw err;
+  }
+};

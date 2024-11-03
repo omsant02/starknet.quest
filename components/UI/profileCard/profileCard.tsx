@@ -21,6 +21,7 @@ import { getTweetLink } from "@utils/browserService";
 import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
+import { calculateTotalBalance } from '../../../services/argentPortfolioService';
 
 type ProfileCardProps = {
   rankingData: RankingData;
@@ -36,6 +37,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   isOwner,
 }) => {
   const [userXp, setUserXp] = useState<number>();
+  const [totalBalance, setTotalBalance] = useState<number | null>(null);
   const sinceDate = useCreationDate(identity);
   const formattedAddress = (
     identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`
@@ -47,6 +49,19 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     if (rank > 5000) return "+5k";
     return rank;
   }, []);
+
+  useEffect(() => {
+    const fetchTotalBalance = async () => {
+      try {
+        const balance = await calculateTotalBalance(formattedAddress, "USD");
+        setTotalBalance(balance);
+      } catch (err) {
+        console.error("Error fetching total balance:", err);
+      }
+    };
+
+    fetchTotalBalance();
+  }, [formattedAddress]);
 
   const computeData = useCallback(() => {
     if (
@@ -108,7 +123,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                 type={TEXT_TYPE.BODY_SMALL}
                 className={`${styles.wallet_amount} font-extrabold`}
               >
-                $2,338.34
+                {totalBalance !== null ? `$${totalBalance.toFixed(2)}` : "Loading..."}
               </Typography>
               <EyeIcon />
             </div>
