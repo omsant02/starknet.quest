@@ -24,14 +24,13 @@ import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
 
-
-interface ProfileCardProps {
-  rankingData: any; 
-  identity: any;
-  leaderboardData: any;
+type ProfileCardProps = {
+  rankingData: RankingData;
+  identity: Identity;
+  leaderboardData: leaderboardData;
   addressOrDomain: string;
   isOwner: boolean;
-}
+};
 
 const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   rankingData,
@@ -41,6 +40,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   isOwner,
 }) => {
   const [userXp, setUserXp] = useState<number>();
+  const [shareLink, setShareLink] = useState<string>("");
   const sinceDate = useCreationDate(identity);
   const formattedAddress = (identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`) as Address;
   const { data: profileData } = useStarkProfile({ address: formattedAddress });
@@ -59,7 +59,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
       leaderboardData &&
       leaderboardData?.total_users > 0
     ) {
-      const user = rankingData.ranking.find(
+      const user = rankingData?.ranking?.find(
         (user) => user.address === hexToDecimal(identity.owner)
       );
       if (user) {
@@ -72,10 +72,14 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     computeData();
   }, [computeData]);
 
-  const shareLink: Url = useMemo(() => {
-    return `${getTweetLink(
-      `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
-    )}`;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareLink(
+        getTweetLink(
+          `Check out${isOwner ? " my " : " "}Starknet Quest Profile at ${window.location.href} #Starknet #StarknetID`
+        )
+      );
+    }
   }, [isOwner]);
 
   return (
@@ -94,12 +98,11 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
             {sinceDate ? `${sinceDate}` : ""}
           </Typography>
           <Typography type={TEXT_TYPE.H2} className={`${styles.profile_name} mt-2`}>
-            {identity.domain.domain}
+            {identity.domain?.domain || "Unknown Domain"}
           </Typography>
           <div className={styles.address_div}>
             <div className="flex items-center gap-2">
-              <Typography type={TEXT_TYPE.BODY_SMALL} className={`${styles.wallet_amount}
-                 font-extrabold`}>
+              <Typography type={TEXT_TYPE.BODY_SMALL} className={`${styles.wallet_amount} font-extrabold`}>
                 $2,338.34
               </Typography>
               <EyeIcon />
@@ -107,17 +110,14 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
           </div>
           <div className="flex sm:hidden justify-center py-4">
             <SocialMediaActions identity={identity} />
-            <Link href={shareLink} target="_blank" rel="noreferrer">
-              <div className={styles.right_share_button}>
-                <CDNImage
-                  src={shareSrc}
-                  width={20}
-                  height={20}
-                  alt="share-icon"
-                />
-                <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
-              </div>
-            </Link>
+            {shareLink && (
+              <Link href={shareLink} target="_blank" rel="noreferrer">
+                <div className={styles.right_share_button}>
+                  <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
+                  <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -126,58 +126,37 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
           <div className={styles.right_top}>
             <div className={styles.right_socials}>
               <SocialMediaActions identity={identity} />
-              <Link href={shareLink} target="_blank" rel="noreferrer">
-                <div className={styles.right_share_button}>
-                  <CDNImage
-                    src={shareSrc}
-                    width={20}
-                    height={20}
-                    alt="share-icon"
-                  />
-                  <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
-                </div>
-              </Link>
+              {shareLink && (
+                <Link href={shareLink} target="_blank" rel="noreferrer">
+                  <div className={styles.right_share_button}>
+                    <CDNImage src={shareSrc} width={20} height={20} alt="share-icon" />
+                    <Typography type={TEXT_TYPE.BODY_DEFAULT}>Share</Typography>
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
         <div className={styles.right_bottom}>
-          {leaderboardData && leaderboardData.total_users > 0 ? (
+          {leaderboardData && leaderboardData.total_users > 0 && (
             <div className={styles.right_bottom_content}>
-              <CDNImage
-                src={trophyIcon}
-                priority
-                width={25}
-                height={25}
-                alt="trophy icon"
-              />
-              <Typography
-                type={TEXT_TYPE.BODY_SMALL}
-                className={styles.statsText}
-              >
+              <CDNImage src={trophyIcon} priority width={25} height={25} alt="trophy icon" />
+              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.statsText}>
                 {leaderboardData.position
                   ? rankFormatter(leaderboardData.position)
                   : "NA"}
               </Typography>
             </div>
-          ) : null}
-          {userXp !== undefined ? (
+          )}
+          {userXp !== undefined && (
             <div className={styles.right_bottom_content}>
-              <CDNImage
-                src={xpIcon}
-                priority
-                width={30}
-                height={30}
-                alt="xp badge"
-              />
-              <Typography
-                type={TEXT_TYPE.BODY_SMALL}
-                className={styles.statsText}
-              >
+              <CDNImage src={xpIcon} priority width={30} height={30} alt="xp badge" />
+              <Typography type={TEXT_TYPE.BODY_SMALL} className={styles.statsText}>
                 {userXp ?? "0"}
               </Typography>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
