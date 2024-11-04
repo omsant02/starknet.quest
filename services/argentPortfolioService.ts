@@ -21,9 +21,9 @@ const DEFAULT_INITIAL_DELAY = 2000; // in milliseconds
 const DEFAULT_MAX_DELAY = 10000; // Cap maximum delay at 10 seconds
 const DEFAULT_BACKOFF_FACTOR = 2;
 
-const fetchData = async <T>(endpoint: string): Promise<T> => {
+const fetchData = async <T>(endpoint: string, { signal }: { signal?: AbortSignal }): Promise<T> => {
   try {
-    const response = await fetch(endpoint, { headers: API_HEADERS });
+    const response = await fetch(endpoint, { headers: API_HEADERS, signal });
     if (!response.ok) {
       throw new Error(
         `Error ${response.status}: ${await response.text()}`
@@ -44,6 +44,7 @@ const fetchDataWithRetry = async <T>(
     maxDelay?: number;
     backoffFactor?: number;
     filterErrorRetryable?: (error: Error) => boolean;
+    signal?: AbortSignal;
   }
 ): Promise<T> => {
   const maxRetries = options?.maxRetries ?? DEFAULT_MAX_RETRIES;
@@ -51,15 +52,21 @@ const fetchDataWithRetry = async <T>(
   const maxDelay = options?.maxDelay ?? DEFAULT_MAX_DELAY;
   const backoffFactor = options?.backoffFactor ?? DEFAULT_BACKOFF_FACTOR;
   const filterErrorRetryable = options?.filterErrorRetryable ?? (() => true);
+  const { signal } = options ?? {};
   let retries = 0;
   let delay = initialDelay;
   let lastError: Error = new Error('No request attempted');
 
   while (retries <= maxRetries) {
     try {
-      return await fetchData<T>(endpoint);
+      return await fetchData<T>(endpoint, { signal });
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
+
+      // Prevent abort errors from being retried
+      if (lastError.name === 'AbortError') {
+        throw lastError;
+      }
 
       if (!filterErrorRetryable(lastError)) {
         throw lastError;
@@ -80,37 +87,39 @@ const fetchDataWithRetry = async <T>(
   );
 };
 
-export const fetchDapps = async () => {
-  const data = await fetchDataWithRetry<ArgentDapp[]>(`${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`);
+export const fetchDapps = async ({ signal }: { signal?: AbortSignal }) => {
+  const data = await fetchDataWithRetry<ArgentDapp[]>(`${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`, { signal });
   return Object.fromEntries(data.map((dapp) => [dapp.dappId, dapp])) as ArgentDappMap;
 };
 
-export const fetchTokens = async () => {
-  const data = await fetchDataWithRetry<{ tokens: ArgentToken[] }>(`${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`);
+export const fetchTokens = async ({ signal }: { signal?: AbortSignal }) => {
+  const data = await fetchDataWithRetry<{ tokens: ArgentToken[] }>(`${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`, { signal });
   return Object.fromEntries(data.tokens.map((token) => [token.address, token])) as ArgentTokenMap;
 };
 
-export const fetchUserTokens = async (walletAddress: string) => {
-  const data = await fetchDataWithRetry<{ balances: ArgentUserToken[], status: string }>(`${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`);
+export const fetchUserTokens = async (walletAddress: string, { signal }: { signal?: AbortSignal }) => {
+  const data = await fetchDataWithRetry<{ balances: ArgentUserToken[], status: string }>(`${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`, { signal });
   return data.balances;
 };
 
-export const fetchUserDapps = async (walletAddress: string) => {
-  const data = await fetchDataWithRetry<{ dapps: ArgentUserDapp[] }>(`${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`);
+export const fetchUserDapps = async (walletAddress: string, { signal }: { signal?: AbortSignal }) => {
+  const data = await fetchDataWithRetry<{ dapps: ArgentUserDapp[] }>(`${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`, { signal });
   return data.dapps;
 };
 
 export const calculateTokenPrice = async (
   tokenAddress: string,
   tokenAmount: string,
-  currency: "USD" | "EUR" | "GBP" = "USD"
+  currency: "USD" | "EUR" | "GBP" = "USD",
+  { signal }: { signal?: AbortSignal } = {}
 ) => {
   let data: ArgentTokenValue;
   try {
     data = await fetchDataWithRetry<ArgentTokenValue>(
       `${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`,
       {
-        filterErrorRetryable: (error) => !error.message.includes('No price for token')
+        filterErrorRetryable: (error) => !error.message.includes('No price for token'),
+        signal
       }
     );
   } catch (err) {

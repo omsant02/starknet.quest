@@ -221,10 +221,10 @@ export default function Page({ params }: AddressOrDomainProps) {
       }
 
       try {
-      const value = await calculateTokenPrice(
-        token.tokenAddress,
-        tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
-        "USD"
+        const value = await calculateTokenPrice(
+          token.tokenAddress,
+          tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
+          "USD"
         );
         return {
           value,
@@ -369,7 +369,7 @@ export default function Page({ params }: AddressOrDomainProps) {
   const handleDebt = async (
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
-    tokens: ArgentTokenMap
+    tokens: ArgentTokenMap,
   ) => {
     const debtStatus = userHasDebt(userDapps);
     if (!debtStatus || !debtStatus.hasDebt) {
@@ -395,7 +395,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userTokens: ArgentUserToken[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap
+    dapps: ArgentDappMap,
   ) => {
     for await (const token of userTokens) {
       const tokenInfo = tokens[token.tokenAddress];
@@ -429,7 +429,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap
+    dapps: ArgentDappMap,
   ) => {
     for await (const userDapp of userDapps) {
       if (protocolsMap[userDapp.dappId]) {
@@ -530,17 +530,17 @@ export default function Page({ params }: AddressOrDomainProps) {
     }
   }, [address]);
 
-  const fetchPortfolioData = useCallback(async (addr: string) => {
+  const fetchPortfolioData = useCallback(async (addr: string, abortController: AbortController) => {
     setLoadingProtocols(true);
     try {
       // Argent API requires lowercase address
       const normalizedAddr = addr.toLowerCase();
       const [dappsData, tokensData, userTokensData, userDappsData] =
         await Promise.all([
-          fetchDapps(),
-          fetchTokens(),
-          fetchUserTokens(normalizedAddr),
-          fetchUserDapps(normalizedAddr),
+          fetchDapps({ signal: abortController.signal }),
+          fetchTokens({ signal: abortController.signal }),
+          fetchUserTokens(normalizedAddr, { signal: abortController.signal }),
+          fetchUserDapps(normalizedAddr, { signal: abortController.signal }),
         ]);
 
       const data = {
@@ -563,10 +563,14 @@ export default function Page({ params }: AddressOrDomainProps) {
   }, [fetchPortfolioProtocols, fetchPortfolioAssets]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     if (!identity) return;
     fetchQuestData(identity.owner);
     fetchPageData(identity.owner);
-    fetchPortfolioData(identity.owner);
+    fetchPortfolioData(identity.owner, abortController);
+
+    return () => abortController.abort();
   }, [identity]);
 
   useEffect(() => setNotFound(false), [dynamicRoute]);
