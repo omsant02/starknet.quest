@@ -8,6 +8,7 @@ import React, {
 import styles from "@styles/dashboard.module.css";
 import { CDNImage } from "@components/cdn/image";
 import { useStarkProfile, type Address } from "@starknet-react/core";
+import Skeleton from "@mui/material/Skeleton";
 import trophyIcon from "public/icons/trophy.svg";
 import xpIcon from "public/icons/xpBadge.svg";
 import useCreationDate from "@hooks/useCreationDate";
@@ -123,7 +124,11 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                 type={TEXT_TYPE.BODY_SMALL}
                 className={`${styles.wallet_amount} font-extrabold`}
               >
-                {totalBalance !== null ? `$${totalBalance.toFixed(2)}` : "Loading..."}
+                {totalBalance !== null ?(
+                  `$${totalBalance.toFixed(2)}`
+                ) : (
+                  <Skeleton variant="text" width={60} height={30} />
+                )}
               </Typography>
               <EyeIcon />
             </div>

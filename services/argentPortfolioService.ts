@@ -75,10 +75,11 @@ export const calculateTotalBalance = async (
 
     for (const token of tokens) {
       try {
-        // Calculate the price of each token and add it to the total balance
+        // Adjust token balance by dividing by 10^18, then calculate its price
+        const adjustedBalance = Number(token.tokenBalance) / 10 ** 18;
         const tokenValue = await calculateTokenPrice(
           token.tokenAddress,
-          token.tokenBalance,
+          adjustedBalance.toString(),
           currency
         );
         totalBalance += tokenValue;
