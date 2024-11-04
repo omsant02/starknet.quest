@@ -20,9 +20,7 @@ const fetchData = async <T>(endpoint: string): Promise<T> => {
   try {
     const response = await fetch(endpoint, { headers: API_HEADERS });
     if (!response.ok) {
-      throw new Error(
-        `Error ${response.status}: ${await response.text()}`
-      );
+      throw new Error(`Error ${response.status}: ${await response.text()}`);
     }
     return await response.json();
   } catch (err) {
@@ -32,22 +30,34 @@ const fetchData = async <T>(endpoint: string): Promise<T> => {
 };
 
 export const fetchDapps = async () => {
-  const data = await fetchData<ArgentDapp[]>(`${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`);
-  return Object.fromEntries(data.map((dapp) => [dapp.dappId, dapp])) as ArgentDappMap;
+  const data = await fetchData<ArgentDapp[]>(
+    `${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`
+  );
+  return Object.fromEntries(
+    data.map((dapp) => [dapp.dappId, dapp])
+  ) as ArgentDappMap;
 };
 
 export const fetchTokens = async () => {
-  const data = await fetchData<{ tokens: ArgentToken[] }>(`${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`);
-  return Object.fromEntries(data.tokens.map((token) => [token.address, token])) as ArgentTokenMap;
+  const data = await fetchData<{ tokens: ArgentToken[] }>(
+    `${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`
+  );
+  return Object.fromEntries(
+    data.tokens.map((token) => [token.address, token])
+  ) as ArgentTokenMap;
 };
 
 export const fetchUserTokens = async (walletAddress: string) => {
-  const data = await fetchData<{ balances: ArgentUserToken[], status: string }>(`${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`);
+  const data = await fetchData<{ balances: ArgentUserToken[]; status: string }>(
+    `${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`
+  );
   return data.balances;
 };
 
 export const fetchUserDapps = async (walletAddress: string) => {
-  const data = await fetchData<{ dapps: ArgentUserDapp[] }>(`${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`);
+  const data = await fetchData<{ dapps: ArgentUserDapp[] }>(
+    `${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`
+  );
   return data.dapps;
 };
 
@@ -56,7 +66,9 @@ export const calculateTokenPrice = async (
   tokenAmount: string,
   currency: "USD" | "EUR" | "GBP" = "USD"
 ) => {
-  const data = await fetchData<ArgentTokenValue>(`${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`);
+  const data = await fetchData<ArgentTokenValue>(
+    `${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`
+  );
   try {
     return Number(tokenAmount) * Number(data.ccyValue);
   } catch (err) {
@@ -76,7 +88,9 @@ export const calculateTotalBalance = async (
     for (const token of tokens) {
       try {
         // Adjust token balance by dividing by 10^18, then calculate its price
-        const adjustedBalance = Number(token.tokenBalance) / 10 ** 18;
+        const tokenInfo = await fetchTokens();
+        const decimals = tokenInfo[token.tokenAddress]?.decimals ?? 18;
+        const adjustedBalance = Number(token.tokenBalance) / 10 ** decimals;
         const tokenValue = await calculateTokenPrice(
           token.tokenAddress,
           adjustedBalance.toString(),
@@ -84,7 +98,10 @@ export const calculateTotalBalance = async (
         );
         totalBalance += tokenValue;
       } catch (err) {
-        console.error(`Error calculating price for token ${token.tokenAddress}:`, err);
+        console.error(
+          `Error calculating price for token ${token.tokenAddress}:`,
+          err
+        );
       }
     }
 

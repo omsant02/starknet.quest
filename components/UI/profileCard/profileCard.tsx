@@ -22,7 +22,7 @@ import { getTweetLink } from "@utils/browserService";
 import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
-import { calculateTotalBalance } from '../../../services/argentPortfolioService';
+import { calculateTotalBalance } from "../../../services/argentPortfolioService";
 
 type ProfileCardProps = {
   rankingData: RankingData;
@@ -124,7 +124,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                 type={TEXT_TYPE.BODY_SMALL}
                 className={`${styles.wallet_amount} font-extrabold`}
               >
-                {totalBalance !== null ?(
+                {totalBalance !== null ? (
                   `$${totalBalance.toFixed(2)}`
                 ) : (
                   <Skeleton variant="text" width={60} height={30} />
