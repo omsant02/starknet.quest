@@ -138,14 +138,10 @@ export class LdtkReader {
         },
         textureOffset: { x: xOffset, y: yOffset },
         textureRepeat: {
-          x:
-            1 /
-            (spritesPerRow /
-              ((entity?.tileRect.w ?? 0) / tileset?.tileGridSize ?? 1)),
+          x: 1 / (spritesPerRow / (entity?.tileRect.w / tileset?.tileGridSize)),
           y:
             1 /
-            (spritesPerColumn /
-              ((entity?.tileRect.h ?? 0) / tileset?.tileGridSize ?? 1)),
+            (spritesPerColumn / (entity?.tileRect.h / tileset?.tileGridSize)),
         },
         z: 0.23,
       });
