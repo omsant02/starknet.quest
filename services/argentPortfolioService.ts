@@ -16,6 +16,11 @@ const API_HEADERS = {
   "argent-version": "1.4.3",
 };
 
+const DEFAULT_MAX_RETRIES = 3;
+const DEFAULT_INITIAL_DELAY = 2000; // in milliseconds
+const DEFAULT_MAX_DELAY = 10000; // Cap maximum delay at 10 seconds
+const DEFAULT_BACKOFF_FACTOR = 2;
+
 const fetchData = async <T>(endpoint: string): Promise<T> => {
   try {
     const response = await fetch(endpoint, { headers: API_HEADERS });
@@ -31,23 +36,67 @@ const fetchData = async <T>(endpoint: string): Promise<T> => {
   }
 };
 
+const fetchDataWithRetry = async <T>(
+  endpoint: string,
+  options?: {
+    maxRetries?: number;
+    initialDelay?: number;
+    maxDelay?: number;
+    backoffFactor?: number;
+    filterErrorRetryable?: (error: Error) => boolean;
+  }
+): Promise<T> => {
+  const maxRetries = options?.maxRetries ?? DEFAULT_MAX_RETRIES;
+  const initialDelay = options?.initialDelay ?? DEFAULT_INITIAL_DELAY;
+  const maxDelay = options?.maxDelay ?? DEFAULT_MAX_DELAY;
+  const backoffFactor = options?.backoffFactor ?? DEFAULT_BACKOFF_FACTOR;
+  const filterErrorRetryable = options?.filterErrorRetryable ?? (() => true);
+  let retries = 0;
+  let delay = initialDelay;
+  let lastError: Error = new Error('No request attempted');
+
+  while (retries <= maxRetries) {
+    try {
+      return await fetchData<T>(endpoint);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      if (!filterErrorRetryable(lastError)) {
+        throw lastError;
+      }
+
+      if (retries === maxRetries) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay = Math.min(delay * backoffFactor, maxDelay); // Cap the delay
+      retries++;
+    }
+  }
+
+  throw new Error(
+    `Failed after ${maxRetries} retries. Endpoint: ${endpoint}. Error: ${lastError.message}`
+  );
+};
+
 export const fetchDapps = async () => {
-  const data = await fetchData<ArgentDapp[]>(`${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`);
+  const data = await fetchDataWithRetry<ArgentDapp[]>(`${API_BASE}/${API_VERSION}/tokens/dapps?chain=starknet`);
   return Object.fromEntries(data.map((dapp) => [dapp.dappId, dapp])) as ArgentDappMap;
 };
 
 export const fetchTokens = async () => {
-  const data = await fetchData<{ tokens: ArgentToken[] }>(`${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`);
+  const data = await fetchDataWithRetry<{ tokens: ArgentToken[] }>(`${API_BASE}/${API_VERSION}/tokens/info?chain=starknet`);
   return Object.fromEntries(data.tokens.map((token) => [token.address, token])) as ArgentTokenMap;
 };
 
 export const fetchUserTokens = async (walletAddress: string) => {
-  const data = await fetchData<{ balances: ArgentUserToken[], status: string }>(`${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`);
+  const data = await fetchDataWithRetry<{ balances: ArgentUserToken[], status: string }>(`${API_BASE}/${API_VERSION}/activity/starknet/mainnet/account/${walletAddress}/balance`);
   return data.balances;
 };
 
 export const fetchUserDapps = async (walletAddress: string) => {
-  const data = await fetchData<{ dapps: ArgentUserDapp[] }>(`${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`);
+  const data = await fetchDataWithRetry<{ dapps: ArgentUserDapp[] }>(`${API_BASE}/${API_VERSION}/tokens/defi/decomposition/${walletAddress}?chain=starknet`);
   return data.dapps;
 };
 
@@ -58,7 +107,12 @@ export const calculateTokenPrice = async (
 ) => {
   let data: ArgentTokenValue;
   try {
-    data = await fetchData<ArgentTokenValue>(`${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`);
+    data = await fetchDataWithRetry<ArgentTokenValue>(
+      `${API_BASE}/${API_VERSION}/tokens/prices/${tokenAddress}?chain=starknet&currency=${currency}`,
+      {
+        filterErrorRetryable: (error) => !error.message.includes('No price for token')
+      }
+    );
   } catch (err) {
     if (err instanceof Error && err.message.includes('No price for token')) {
       return 0;
