@@ -23,6 +23,8 @@ import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
 import { calculateTotalBalance } from "../../../services/argentPortfolioService";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
 
 type ProfileCardProps = {
   rankingData: RankingData;
@@ -53,11 +55,22 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
 
   useEffect(() => {
     const fetchTotalBalance = async () => {
-      try {
-        const balance = await calculateTotalBalance(formattedAddress, "USD");
-        setTotalBalance(balance);
-      } catch (err) {
-        console.error("Error fetching total balance:", err);
+      let attempts = 0;
+      while (attempts < MAX_RETRIES) {
+        try {
+          const balance = await calculateTotalBalance(formattedAddress, "USD");
+          setTotalBalance(balance);
+          return; // Exit if successful
+        } catch (err) {
+          attempts++;
+          console.error(`Attempt ${attempts} - Error fetching total balance:`, err);
+          
+          if (attempts >= MAX_RETRIES) {
+            console.error("Failed to fetch total balance after multiple attempts.");
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+          }
+        }
       }
     };
 
