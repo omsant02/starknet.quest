@@ -555,8 +555,14 @@ export default function Page({ params }: AddressOrDomainProps) {
         fetchPortfolioAssets(data),
       ]);
     } catch (error) {
-      showNotification("Error while fetching address portfolio", "error");
       console.log("Error while fetching address portfolio", error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Do not show notification for AbortError
+        return;
+      }
+
+      showNotification("Error while fetching address portfolio", "error");
+
     } finally {
       setLoadingProtocols(false);
     }
