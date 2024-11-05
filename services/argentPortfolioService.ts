@@ -25,9 +25,7 @@ const fetchData = async <T>(endpoint: string, { signal }: { signal?: AbortSignal
   try {
     const response = await fetch(endpoint, { headers: API_HEADERS, signal });
     if (!response.ok) {
-      throw new Error(
-        `Error ${response.status}: ${await response.text()}`
-      );
+      throw new Error(`Error ${response.status}: ${await response.text()}`);
     }
     return await response.json();
   } catch (err) {
@@ -132,6 +130,42 @@ export const calculateTokenPrice = async (
     return Number(tokenAmount) * Number(data.ccyValue);
   } catch (err) {
     console.log("Error while calculating token price", err);
+    throw err;
+  }
+};
+
+export const calculateTotalBalance = async (
+  walletAddress: string,
+  currency: "USD" | "EUR" | "GBP" = "USD",
+  { signal }: { signal?: AbortSignal } = {} 
+): Promise<number> => {
+  try {
+    const tokens = await fetchUserTokens(walletAddress, { signal }); // Fetch all tokens in wallet
+    let totalBalance = 0;
+
+    for (const token of tokens) {
+      try {
+        // Adjust token balance by dividing by 10^18, then calculate its price
+        const tokenInfo = await fetchTokens({ signal });
+        const decimals = tokenInfo[token.tokenAddress]?.decimals ?? 18;
+        const adjustedBalance = Number(token.tokenBalance) / 10 ** decimals;
+        const tokenValue = await calculateTokenPrice(
+          token.tokenAddress,
+          adjustedBalance.toString(),
+          currency
+        );
+        totalBalance += tokenValue;
+      } catch (err) {
+        console.error(
+          `Error calculating price for token ${token.tokenAddress}:`,
+          err
+        );
+      }
+    }
+
+    return totalBalance;
+  } catch (err) {
+    console.error("Error calculating total balance:", err);
     throw err;
   }
 };

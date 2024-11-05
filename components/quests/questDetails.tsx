@@ -389,7 +389,7 @@ const QuestDetails: FunctionComponent<QuestDetailsProps> = ({
                   key={task.id}
                   name={task.name}
                   customError={
-                    task.name?.includes("Discord" || "discord")
+                    task?.name?.toLowerCase().includes("discord")
                       ? customError
                       : ""
                   }

@@ -8,6 +8,7 @@ import React, {
 import styles from "@styles/dashboard.module.css";
 import { CDNImage } from "@components/cdn/image";
 import { useStarkProfile, type Address } from "@starknet-react/core";
+import Skeleton from "@mui/material/Skeleton";
 import trophyIcon from "public/icons/trophy.svg";
 import xpIcon from "public/icons/xpBadge.svg";
 import useCreationDate from "@hooks/useCreationDate";
@@ -21,6 +22,11 @@ import { getTweetLink } from "@utils/browserService";
 import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
+import { calculateTotalBalance } from "../../../services/argentPortfolioService";
+const MAX_RETRIES = 1000;
+const RETRY_DELAY = 2000;
+const controller = new AbortController();
+const { signal } = controller;
 
 type ProfileCardProps = {
   rankingData: RankingData;
@@ -36,6 +42,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   isOwner,
 }) => {
   const [userXp, setUserXp] = useState<number>();
+  const [totalBalance, setTotalBalance] = useState<number | null>(null);
   const sinceDate = useCreationDate(identity);
   const formattedAddress = (
     identity.owner.startsWith("0x") ? identity.owner : `0x${identity.owner}`
@@ -47,6 +54,30 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
     if (rank > 5000) return "+5k";
     return rank;
   }, []);
+
+  useEffect(() => {
+    const fetchTotalBalance = async () => {
+      let attempts = 0;
+      while (true) {
+        try {
+          const balance = await calculateTotalBalance(formattedAddress, "USD", {signal});
+          setTotalBalance(balance);
+          return; // Exit if successful
+        } catch (err) {
+          attempts++;
+          console.error(`Attempt ${attempts} - Error fetching total balance:`, err);
+          
+          if (attempts >= MAX_RETRIES) {
+            console.error("Failed to fetch total balance after multiple attempts.");
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+          }
+        }
+      }
+    };
+
+    fetchTotalBalance();
+  }, [formattedAddress]);
 
   const computeData = useCallback(() => {
     if (
@@ -108,7 +139,11 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                 type={TEXT_TYPE.BODY_SMALL}
                 className={`${styles.wallet_amount} font-extrabold`}
               >
-                $2,338.34
+                {totalBalance !== null ? (
+                  `$${totalBalance.toFixed(2)}`
+                ) : (
+                  <Skeleton variant="text" width={60} height={30} />
+                )}
               </Typography>
               <EyeIcon />
             </div>
