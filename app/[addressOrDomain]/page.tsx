@@ -201,41 +201,145 @@ export default function Page({ params }: AddressOrDomainProps) {
     setQuestsLoading(false);
   }, []);
 
-  const fetchPortfolioAssets = useCallback(async (addr: string) => {
-    // TODO: Implement fetch from Argent API
-    const assets = [
-      {
-        color: "#1E2097",
-        itemLabel: "USDC",
-        itemValue: "46.68",
+  const calculateAssetPercentages = async (
+    userTokens: ArgentUserToken[],
+    tokens: ArgentTokenMap,
+    dapps: ArgentDappMap,
+    userDapps: ArgentUserDapp[],
+  ) => {
+    let totalValue = 0;
+    const assetValues: { [symbol: string]: number } = {};
+
+    // Process user tokens in parallel
+    const userTokenPromises = userTokens.map(async (token) => {
+      const tokenInfo = tokens[token.tokenAddress];
+      if (!tokenInfo || token.tokenBalance === "0") return null;
+
+      // Skip protocol tokens (like LPT pair tokens, staking, etc.)
+      if (tokenInfo.dappId) {
+        return null;
+      }
+
+      try {
+        const value = await calculateTokenPrice(
+          token.tokenAddress,
+          tokenToDecimal(token.tokenBalance, tokenInfo.decimals),
+          "USD"
+        );
+        return {
+          value,
+          symbol: tokenInfo.symbol || "Unknown",
+          isProtocolToken: !!tokenInfo.dappId
+        };
+      } catch (err) {
+        console.log(`Error calculating price for token ${token.tokenAddress}:`, err);
+        return null;
+      }
+    });
+
+    // Flatten userDapps into an array of token balances
+    const dappBalances = userDapps.flatMap(dapp =>
+      dapp.products[0]?.positions.flatMap(position =>
+        Object.entries(position.totalBalances).map(([tokenAddress, balance]) => ({
+          tokenAddress,
+          balance,
+          dappId: dapp.dappId
+        }))
+      ) ?? []
+    );
+
+    // Process all balances in parallel
+    const balancePromises = dappBalances.map(async ({ tokenAddress, balance, dappId }) => {
+      const tokenInfo = tokens[tokenAddress];
+      if (!tokenInfo || balance === "0") return null;
+
+      try {
+        const value = await calculateTokenPrice(
+          tokenAddress,
+          tokenToDecimal(balance, tokenInfo.decimals),
+          "USD"
+        );
+
+        return {
+          value,
+          symbol: tokenInfo.symbol || "Unknown",
+          isProtocolToken: !!tokenInfo.dappId,
+        };
+      } catch (err) {
+        console.log(`Error calculating price for token ${tokenAddress}:`, err);
+        return null;
+      }
+    });
+
+    // Process results
+    const results = (await Promise.all([
+      ...balancePromises,
+      ...userTokenPromises
+    ])).filter(Boolean);
+
+    results.forEach(result => {
+      if (!result) return;
+      const { value, symbol, isProtocolToken } = result;
+
+      if (value < 0) return; // Skip negative balances
+
+      totalValue += value;
+
+      if (!isProtocolToken) {
+        assetValues[symbol] = (assetValues[symbol] || 0) + value;
+      }
+    });
+    // Convert to percentages and format
+    const sortedAssets = Object.entries(assetValues)
+      .sort(([, a], [, b]) => b - a)
+      .map(([symbol, value]) => ({
+        itemLabel: symbol,
+        itemValue: ((value / totalValue) * 100).toFixed(2),
         itemValueSymbol: "%",
-      },
-      {
-        color: "#637DEB",
-        itemLabel: "USDT",
-        itemValue: "27.94",
-        itemValueSymbol: "%",
-      },
-      {
-        color: "#2775CA",
-        itemLabel: "STRK",
-        itemValue: "22.78",
-        itemValueSymbol: "%",
-      },
-      {
-        color: "#5CE3FE",
-        itemLabel: "ETH",
-        itemValue: "0.36",
-        itemValueSymbol: "%",
-      },
-      {
-        color: "#F4FAFF",
+        color: "" // Colors will be assigned later
+      }));
+
+    // Handle "Others" category if needed
+    if (sortedAssets.length > 4) {
+      const others = sortedAssets.slice(4).reduce(
+        (sum, asset) => sum + parseFloat(asset.itemValue),
+        0
+      );
+      sortedAssets.splice(4);
+      sortedAssets.push({
         itemLabel: "Others",
-        itemValue: "2.36",
+        itemValue: others.toFixed(2),
         itemValueSymbol: "%",
-      },
-    ];
-    setPortfolioAssets(assets);
+        color: ""
+      });
+    }
+
+    // Assign colors
+    const colors = ["#1E2097", "#637DEB", "#2775CA", "#5CE3FE", "#F4FAFF"];
+    sortedAssets.forEach((asset, index) => {
+      asset.color = colors[index % colors.length]; // Use modulo to recycle colors if needed
+    });
+    return sortedAssets;
+  };
+
+  const fetchPortfolioAssets = useCallback(async (data: {
+    dapps: ArgentDappMap,
+    tokens: ArgentTokenMap,
+    userTokens: ArgentUserToken[],
+    userDapps: ArgentUserDapp[]
+  }) => {
+    const { dapps, tokens, userTokens, userDapps } = data;
+    try {
+      if (!tokens || !userTokens || !dapps || !userDapps) {
+        console.warn('Missing required data for portfolio calculation');
+        return;
+      }
+      const assets = await calculateAssetPercentages(userTokens, tokens, dapps, userDapps);
+      setPortfolioAssets(assets);
+    } catch (error) {
+      showNotification("Error while fetching portfolio assets", "error");
+      console.log("Error while fetching portfolio assets", error);
+    }
   }, []);
 
   const userHasDebt = (userDapps: ArgentUserDapp[]) => {
@@ -265,7 +369,7 @@ export default function Page({ params }: AddressOrDomainProps) {
   const handleDebt = async (
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
-    tokens: ArgentTokenMap
+    tokens: ArgentTokenMap,
   ) => {
     const debtStatus = userHasDebt(userDapps);
     if (!debtStatus || !debtStatus.hasDebt) {
@@ -291,7 +395,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userTokens: ArgentUserToken[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap
+    dapps: ArgentDappMap,
   ) => {
     for await (const token of userTokens) {
       const tokenInfo = tokens[token.tokenAddress];
@@ -325,7 +429,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap
+    dapps: ArgentDappMap,
   ) => {
     for await (const userDapp of userDapps) {
       if (protocolsMap[userDapp.dappId]) {
@@ -396,24 +500,13 @@ export default function Page({ params }: AddressOrDomainProps) {
     });
   };
 
-  const fetchPortfolioProtocols = useCallback(async (addr: string) => {
-    let dapps: ArgentDappMap = {};
-    let tokens: ArgentTokenMap = {};
-    let userTokens: ArgentUserToken[] = [];
-    let userDapps: ArgentUserDapp[] = [];
-
-    setLoadingProtocols(true);
-    try {
-      [dapps, tokens, userTokens, userDapps] = await Promise.all([
-        fetchDapps(),
-        fetchTokens(),
-        fetchUserTokens(addr),
-        fetchUserDapps(addr),
-      ]);
-    } catch (error) {
-      showNotification("Error while fetching address portfolio", "error");
-      console.log("Error while fetching address portfolio", error);
-    }
+  const fetchPortfolioProtocols = useCallback(async (data: {
+    dapps: ArgentDappMap, 
+    tokens: ArgentTokenMap, 
+    userTokens: ArgentUserToken[], 
+    userDapps: ArgentUserDapp[]
+  }) => {
+    const { dapps, tokens, userTokens, userDapps } = data;
 
     if (!dapps || !tokens || (!userTokens && !userDapps)) return;
     let protocolsMap: ChartItemMap = {};
@@ -435,16 +528,55 @@ export default function Page({ params }: AddressOrDomainProps) {
       );
       console.log("Error while calculating address portfolio stats", error);
     }
+  }, [address]);
 
-    setLoadingProtocols(false);
-  }, []);
+  const fetchPortfolioData = useCallback(async (addr: string, abortController: AbortController) => {
+    setLoadingProtocols(true);
+    try {
+      // Argent API requires lowercase address
+      const normalizedAddr = addr.toLowerCase();
+      const [dappsData, tokensData, userTokensData, userDappsData] =
+        await Promise.all([
+          fetchDapps({ signal: abortController.signal }),
+          fetchTokens({ signal: abortController.signal }),
+          fetchUserTokens(normalizedAddr, { signal: abortController.signal }),
+          fetchUserDapps(normalizedAddr, { signal: abortController.signal }),
+        ]);
+
+      const data = {
+        dapps: dappsData,
+        tokens: tokensData,
+        userTokens: userTokensData,
+        userDapps: userDappsData,
+      };
+
+      await Promise.all([
+        fetchPortfolioProtocols(data),
+        fetchPortfolioAssets(data),
+      ]);
+    } catch (error) {
+      console.log("Error while fetching address portfolio", error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Do not show notification for AbortError
+        return;
+      }
+
+      showNotification("Error while fetching address portfolio", "error");
+
+    } finally {
+      setLoadingProtocols(false);
+    }
+  }, [fetchPortfolioProtocols, fetchPortfolioAssets]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     if (!identity) return;
     fetchQuestData(identity.owner);
     fetchPageData(identity.owner);
-    fetchPortfolioAssets(identity.owner);
-    fetchPortfolioProtocols(identity.owner);
+    fetchPortfolioData(identity.owner, abortController);
+
+    return () => abortController.abort();
   }, [identity]);
 
   useEffect(() => setNotFound(false), [dynamicRoute]);

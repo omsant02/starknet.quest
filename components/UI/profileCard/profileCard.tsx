@@ -23,8 +23,10 @@ import { hexToDecimal } from "@utils/feltService";
 import { TEXT_TYPE } from "@constants/typography";
 import Typography from "../typography/typography";
 import { calculateTotalBalance } from "../../../services/argentPortfolioService";
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 1000;
 const RETRY_DELAY = 2000;
+const controller = new AbortController();
+const { signal } = controller;
 
 type ProfileCardProps = {
   rankingData: RankingData;
@@ -56,9 +58,9 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
   useEffect(() => {
     const fetchTotalBalance = async () => {
       let attempts = 0;
-      while (attempts < MAX_RETRIES) {
+      while (true) {
         try {
-          const balance = await calculateTotalBalance(formattedAddress, "USD");
+          const balance = await calculateTotalBalance(formattedAddress, "USD", {signal});
           setTotalBalance(balance);
           return; // Exit if successful
         } catch (err) {
