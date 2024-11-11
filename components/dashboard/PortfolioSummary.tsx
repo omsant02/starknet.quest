@@ -11,11 +11,8 @@ import cursorPointer from '../../public/icons/pointer-cursor.png';
 import ClaimModal from "../discover/claimModal";
 import SuccessModal from "../discover/successModal";
 import { useHidePortfolio } from "@hooks/useHidePortfolio";
+import { formatNumberWithCommas } from "@utils/numberService";
 
-// Format the numbers with commas
-const formatNumberWithCommas = (number: number): string => {
-  return number.toLocaleString(); // Default locale formatting
-};
 
 Chart.register(ArcElement, DoughnutController, Tooltip);
 
