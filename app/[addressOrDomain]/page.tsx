@@ -47,6 +47,7 @@ import {
   fetchUserTokens,
 } from "@services/argentPortfolioService";
 import PortfolioSummarySkeleton from "@components/skeletons/portfolioSummarySkeleton";
+import { useDisplayName } from "@hooks/displayName.tsx";
 
 type AddressOrDomainProps = {
   params: {
@@ -71,7 +72,6 @@ export default function Page({ params }: AddressOrDomainProps) {
   const router = useRouter();
   const addressOrDomain = params.addressOrDomain;
   const { showNotification } = useNotification();
-  const { address } = useAccount();
   const { starknetIdNavigator } = useContext(StarknetIdJsContext);
   const [initProfile, setInitProfile] = useState(false);
   const { getBoostClaimStatus } = useBoost();
@@ -95,6 +95,19 @@ export default function Page({ params }: AddressOrDomainProps) {
   const [portfolioAssets, setPortfolioAssets] = useState<ChartItem[]>([]);
   const [portfolioProtocols, setPortfolioProtocols] = useState<ChartItem[]>([]);
   const [loadingProtocols, setLoadingProtocols] = useState(true);
+  const { address } = useAccount();
+
+  useEffect(() => {
+    if (!address) return;
+
+    // Redirect to the new address profile
+    const updateUrl = (address: string) => {
+      const newUrl = `/${address}`;
+      router.replace(newUrl);
+    };
+
+    updateUrl(address);
+  }, [address, router]);
 
   const handleChangeTab = useCallback(
     (event: React.SyntheticEvent, newValue: number) => {
@@ -205,7 +218,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     userTokens: ArgentUserToken[],
     tokens: ArgentTokenMap,
     dapps: ArgentDappMap,
-    userDapps: ArgentUserDapp[],
+    userDapps: ArgentUserDapp[]
   ) => {
     let totalValue = 0;
     const assetValues: { [symbol: string]: number } = {};
@@ -229,55 +242,65 @@ export default function Page({ params }: AddressOrDomainProps) {
         return {
           value,
           symbol: tokenInfo.symbol || "Unknown",
-          isProtocolToken: !!tokenInfo.dappId
+          isProtocolToken: !!tokenInfo.dappId,
         };
       } catch (err) {
-        console.log(`Error calculating price for token ${token.tokenAddress}:`, err);
+        console.log(
+          `Error calculating price for token ${token.tokenAddress}:`,
+          err
+        );
         return null;
       }
     });
 
     // Flatten userDapps into an array of token balances
-    const dappBalances = userDapps.flatMap(dapp =>
-      dapp.products[0]?.positions.flatMap(position =>
-        Object.entries(position.totalBalances).map(([tokenAddress, balance]) => ({
-          tokenAddress,
-          balance,
-          dappId: dapp.dappId
-        }))
-      ) ?? []
+    const dappBalances = userDapps.flatMap(
+      (dapp) =>
+        dapp.products[0]?.positions.flatMap((position) =>
+          Object.entries(position.totalBalances).map(
+            ([tokenAddress, balance]) => ({
+              tokenAddress,
+              balance,
+              dappId: dapp.dappId,
+            })
+          )
+        ) ?? []
     );
 
     // Process all balances in parallel
-    const balancePromises = dappBalances.map(async ({ tokenAddress, balance, dappId }) => {
-      const tokenInfo = tokens[tokenAddress];
-      if (!tokenInfo || balance === "0") return null;
+    const balancePromises = dappBalances.map(
+      async ({ tokenAddress, balance, dappId }) => {
+        const tokenInfo = tokens[tokenAddress];
+        if (!tokenInfo || balance === "0") return null;
 
-      try {
-        const value = await calculateTokenPrice(
-          tokenAddress,
-          tokenToDecimal(balance, tokenInfo.decimals),
-          "USD"
-        );
+        try {
+          const value = await calculateTokenPrice(
+            tokenAddress,
+            tokenToDecimal(balance, tokenInfo.decimals),
+            "USD"
+          );
 
-        return {
-          value,
-          symbol: tokenInfo.symbol || "Unknown",
-          isProtocolToken: !!tokenInfo.dappId,
-        };
-      } catch (err) {
-        console.log(`Error calculating price for token ${tokenAddress}:`, err);
-        return null;
+          return {
+            value,
+            symbol: tokenInfo.symbol || "Unknown",
+            isProtocolToken: !!tokenInfo.dappId,
+          };
+        } catch (err) {
+          console.log(
+            `Error calculating price for token ${tokenAddress}:`,
+            err
+          );
+          return null;
+        }
       }
-    });
+    );
 
     // Process results
-    const results = (await Promise.all([
-      ...balancePromises,
-      ...userTokenPromises
-    ])).filter(Boolean);
+    const results = (
+      await Promise.all([...balancePromises, ...userTokenPromises])
+    ).filter(Boolean);
 
-    results.forEach(result => {
+    results.forEach((result) => {
       if (!result) return;
       const { value, symbol, isProtocolToken } = result;
 
@@ -296,21 +319,20 @@ export default function Page({ params }: AddressOrDomainProps) {
         itemLabel: symbol,
         itemValue: ((value / totalValue) * 100).toFixed(2),
         itemValueSymbol: "%",
-        color: "" // Colors will be assigned later
+        color: "", // Colors will be assigned later
       }));
 
     // Handle "Others" category if needed
     if (sortedAssets.length > 4) {
-      const others = sortedAssets.slice(4).reduce(
-        (sum, asset) => sum + parseFloat(asset.itemValue),
-        0
-      );
+      const others = sortedAssets
+        .slice(4)
+        .reduce((sum, asset) => sum + parseFloat(asset.itemValue), 0);
       sortedAssets.splice(4);
       sortedAssets.push({
         itemLabel: "Others",
         itemValue: others.toFixed(2),
         itemValueSymbol: "%",
-        color: ""
+        color: "",
       });
     }
 
@@ -322,25 +344,33 @@ export default function Page({ params }: AddressOrDomainProps) {
     return sortedAssets;
   };
 
-  const fetchPortfolioAssets = useCallback(async (data: {
-    dapps: ArgentDappMap,
-    tokens: ArgentTokenMap,
-    userTokens: ArgentUserToken[],
-    userDapps: ArgentUserDapp[]
-  }) => {
-    const { dapps, tokens, userTokens, userDapps } = data;
-    try {
-      if (!tokens || !userTokens || !dapps || !userDapps) {
-        console.warn('Missing required data for portfolio calculation');
-        return;
+  const fetchPortfolioAssets = useCallback(
+    async (data: {
+      dapps: ArgentDappMap;
+      tokens: ArgentTokenMap;
+      userTokens: ArgentUserToken[];
+      userDapps: ArgentUserDapp[];
+    }) => {
+      const { dapps, tokens, userTokens, userDapps } = data;
+      try {
+        if (!tokens || !userTokens || !dapps || !userDapps) {
+          console.warn("Missing required data for portfolio calculation");
+          return;
+        }
+        const assets = await calculateAssetPercentages(
+          userTokens,
+          tokens,
+          dapps,
+          userDapps
+        );
+        setPortfolioAssets(assets);
+      } catch (error) {
+        showNotification("Error while fetching portfolio assets", "error");
+        console.log("Error while fetching portfolio assets", error);
       }
-      const assets = await calculateAssetPercentages(userTokens, tokens, dapps, userDapps);
-      setPortfolioAssets(assets);
-    } catch (error) {
-      showNotification("Error while fetching portfolio assets", "error");
-      console.log("Error while fetching portfolio assets", error);
-    }
-  }, []);
+    },
+    []
+  );
 
   const userHasDebt = (userDapps: ArgentUserDapp[]) => {
     let debt: DebtStatus = { hasDebt: false, tokens: [] };
@@ -369,7 +399,7 @@ export default function Page({ params }: AddressOrDomainProps) {
   const handleDebt = async (
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
-    tokens: ArgentTokenMap,
+    tokens: ArgentTokenMap
   ) => {
     const debtStatus = userHasDebt(userDapps);
     if (!debtStatus || !debtStatus.hasDebt) {
@@ -395,7 +425,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userTokens: ArgentUserToken[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap,
+    dapps: ArgentDappMap
   ) => {
     for await (const token of userTokens) {
       const tokenInfo = tokens[token.tokenAddress];
@@ -429,7 +459,7 @@ export default function Page({ params }: AddressOrDomainProps) {
     protocolsMap: ChartItemMap,
     userDapps: ArgentUserDapp[],
     tokens: ArgentTokenMap,
-    dapps: ArgentDappMap,
+    dapps: ArgentDappMap
   ) => {
     for await (const userDapp of userDapps) {
       if (protocolsMap[userDapp.dappId]) {
@@ -500,73 +530,78 @@ export default function Page({ params }: AddressOrDomainProps) {
     });
   };
 
-  const fetchPortfolioProtocols = useCallback(async (data: {
-    dapps: ArgentDappMap, 
-    tokens: ArgentTokenMap, 
-    userTokens: ArgentUserToken[], 
-    userDapps: ArgentUserDapp[]
-  }) => {
-    const { dapps, tokens, userTokens, userDapps } = data;
+  const fetchPortfolioProtocols = useCallback(
+    async (data: {
+      dapps: ArgentDappMap;
+      tokens: ArgentTokenMap;
+      userTokens: ArgentUserToken[];
+      userDapps: ArgentUserDapp[];
+    }) => {
+      const { dapps, tokens, userTokens, userDapps } = data;
 
-    if (!dapps || !tokens || (!userTokens && !userDapps)) return;
-    let protocolsMap: ChartItemMap = {};
+      if (!dapps || !tokens || (!userTokens && !userDapps)) return;
+      let protocolsMap: ChartItemMap = {};
 
-    try {
-      await getProtocolsFromTokens(protocolsMap, userTokens, tokens, dapps);
-      await handleDebt(protocolsMap, userDapps, tokens); // Tokens show debt as balance 0, so need to handle it manually
-      await getProtocolsFromDapps(protocolsMap, userDapps, tokens, dapps);
+      try {
+        await getProtocolsFromTokens(protocolsMap, userTokens, tokens, dapps);
+        await handleDebt(protocolsMap, userDapps, tokens); // Tokens show debt as balance 0, so need to handle it manually
+        await getProtocolsFromDapps(protocolsMap, userDapps, tokens, dapps);
 
-      let sortedProtocols = sortProtocols(protocolsMap);
-      handleExtraProtocols(sortedProtocols);
-      assignProtocolColors(sortedProtocols);
+        let sortedProtocols = sortProtocols(protocolsMap);
+        handleExtraProtocols(sortedProtocols);
+        assignProtocolColors(sortedProtocols);
 
-      setPortfolioProtocols(sortedProtocols);
-    } catch (error) {
-      showNotification(
-        "Error while calculating address portfolio stats",
-        "error"
-      );
-      console.log("Error while calculating address portfolio stats", error);
-    }
-  }, [address]);
-
-  const fetchPortfolioData = useCallback(async (addr: string, abortController: AbortController) => {
-    setLoadingProtocols(true);
-    try {
-      // Argent API requires lowercase address
-      const normalizedAddr = addr.toLowerCase();
-      const [dappsData, tokensData, userTokensData, userDappsData] =
-        await Promise.all([
-          fetchDapps({ signal: abortController.signal }),
-          fetchTokens({ signal: abortController.signal }),
-          fetchUserTokens(normalizedAddr, { signal: abortController.signal }),
-          fetchUserDapps(normalizedAddr, { signal: abortController.signal }),
-        ]);
-
-      const data = {
-        dapps: dappsData,
-        tokens: tokensData,
-        userTokens: userTokensData,
-        userDapps: userDappsData,
-      };
-
-      await Promise.all([
-        fetchPortfolioProtocols(data),
-        fetchPortfolioAssets(data),
-      ]);
-    } catch (error) {
-      console.log("Error while fetching address portfolio", error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        // Do not show notification for AbortError
-        return;
+        setPortfolioProtocols(sortedProtocols);
+      } catch (error) {
+        showNotification(
+          "Error while calculating address portfolio stats",
+          "error"
+        );
+        console.log("Error while calculating address portfolio stats", error);
       }
+    },
+    [address]
+  );
 
-      showNotification("Error while fetching address portfolio", "error");
+  const fetchPortfolioData = useCallback(
+    async (addr: string, abortController: AbortController) => {
+      setLoadingProtocols(true);
+      try {
+        // Argent API requires lowercase address
+        const normalizedAddr = addr.toLowerCase();
+        const [dappsData, tokensData, userTokensData, userDappsData] =
+          await Promise.all([
+            fetchDapps({ signal: abortController.signal }),
+            fetchTokens({ signal: abortController.signal }),
+            fetchUserTokens(normalizedAddr, { signal: abortController.signal }),
+            fetchUserDapps(normalizedAddr, { signal: abortController.signal }),
+          ]);
 
-    } finally {
-      setLoadingProtocols(false);
-    }
-  }, [fetchPortfolioProtocols, fetchPortfolioAssets]);
+        const data = {
+          dapps: dappsData,
+          tokens: tokensData,
+          userTokens: userTokensData,
+          userDapps: userDappsData,
+        };
+
+        await Promise.all([
+          fetchPortfolioProtocols(data),
+          fetchPortfolioAssets(data),
+        ]);
+      } catch (error) {
+        console.log("Error while fetching address portfolio", error);
+        if (error instanceof Error && error.name === "AbortError") {
+          // Do not show notification for AbortError
+          return;
+        }
+
+        showNotification("Error while fetching address portfolio", "error");
+      } finally {
+        setLoadingProtocols(false);
+      }
+    },
+    [fetchPortfolioProtocols, fetchPortfolioAssets]
+  );
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -701,8 +736,8 @@ export default function Page({ params }: AddressOrDomainProps) {
   if (notFound) {
     return (
       <ErrorScreen
-        errorMessage="Profile or Page not found"
-        buttonText="Go back to quests"
+        errorMessage='Profile or Page not found'
+        buttonText='Go back to quests'
         onClick={() => router.push("/")}
       />
     );
@@ -735,7 +770,7 @@ export default function Page({ params }: AddressOrDomainProps) {
           <PortfolioSummarySkeleton />
         ) : (
           <PortfolioSummary
-            title="Portfolio by assets type"
+            title='Portfolio by assets type'
             data={portfolioAssets}
             totalBalance={portfolioAssets.reduce(
               (sum, item) => sum + Number(item.itemValue),
@@ -748,7 +783,7 @@ export default function Page({ params }: AddressOrDomainProps) {
           <PortfolioSummarySkeleton />
         ) : (
           <PortfolioSummary
-            title="Portfolio by protocol usage"
+            title='Portfolio by protocol usage'
             data={portfolioProtocols}
             totalBalance={portfolioProtocols.reduce(
               (sum, item) => sum + Number(item.itemValue),
@@ -766,11 +801,11 @@ export default function Page({ params }: AddressOrDomainProps) {
             style={{
               borderBottom: "0.5px solid rgba(224, 224, 224, 0.3)",
             }}
-            className="pb-6"
+            className='pb-6'
             value={tabIndex}
             onChange={handleChangeTab}
-            aria-label="quests and collectons tabs"
-            indicatorColor="secondary"
+            aria-label='quests and collectons tabs'
+            indicatorColor='secondary'
           >
             <Tab
               disableRipple
@@ -804,7 +839,10 @@ export default function Page({ params }: AddressOrDomainProps) {
             ) : null}
           </Tabs>
         </div>
-        <CustomTabPanel value={tabIndex} index={0}>
+        <CustomTabPanel
+          value={tabIndex}
+          index={0}
+        >
           <div className={styles.quests_container}>
             {questsLoading ? (
               <QuestSkeleton />
@@ -812,7 +850,10 @@ export default function Page({ params }: AddressOrDomainProps) {
               isOwner ? (
                 <SuggestedQuests />
               ) : (
-                <Typography type={TEXT_TYPE.H2} className={styles.noBoosts}>
+                <Typography
+                  type={TEXT_TYPE.H2}
+                  className={styles.noBoosts}
+                >
                   User has not completed any quests at the moment
                 </Typography>
               )
@@ -821,7 +862,10 @@ export default function Page({ params }: AddressOrDomainProps) {
                 <div className={QuestStyles.questContainer}>
                   {completedQuests?.length > 0 &&
                     completedQuests?.map((quest) => (
-                      <QuestCardCustomised key={quest} id={quest} />
+                      <QuestCardCustomised
+                        key={quest}
+                        id={quest}
+                      />
                     ))}
                 </div>
               </section>
@@ -829,11 +873,14 @@ export default function Page({ params }: AddressOrDomainProps) {
           </div>
         </CustomTabPanel>
 
-        <CustomTabPanel value={tabIndex} index={1}>
+        <CustomTabPanel
+          value={tabIndex}
+          index={1}
+        >
           {questsLoading ? (
             <QuestSkeleton />
           ) : (
-            <div className="flex flex-wrap gap-10 justify-center lg:justify-start">
+            <div className='flex flex-wrap gap-10 justify-center lg:justify-start'>
               {claimableQuests &&
                 claimableQuests.map((quest) => (
                   <BoostCard

@@ -55,9 +55,9 @@ export const availableConnectors = [
 
   new WebWalletConnector({
     url:
-      getCurrentNetwork() === "TESTNET"
-        ? "https://web.hydrogen.argent47.net"
-        : "https://web.argent.xyz/",
+      getCurrentNetwork() === 'TESTNET'
+        ? 'https://web.hydrogen.argent47.net'
+        : 'https://web.argent.xyz/',
   }),
   ArgentMobileConnector.init({
     options: {
@@ -68,7 +68,7 @@ export const availableConnectors = [
     },
   }),
 
-  new InjectedConnector({ options: { id: "keplr", name: "Keplr" } }),
+  new InjectedConnector({ options: { id: 'keplr', name: 'Keplr' } }),
 ];
 
 export function Providers({ children }: { children: React.ReactNode }) {
