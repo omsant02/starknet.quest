@@ -31,6 +31,7 @@ import { PendingBoostClaim } from "types/backTypes";
 import Typography from "./typography/typography";
 import { TEXT_TYPE } from "@constants/typography";
 import Hamburger from "./hamburger";
+import { sortConnectors } from "@utils/connectors";
 
 const Navbar: FunctionComponent = () => {
   const currentNetwork = getCurrentNetwork();
@@ -58,10 +59,11 @@ const Navbar: FunctionComponent = () => {
       linkText: "",
     },
   ]);
-  const { starknetkitConnectModal } = useStarknetkitConnectModal({
-    connectors: availableConnectors as any,
-  });
+  const sortedConnectors = sortConnectors(availableConnectors);
 
+  const { starknetkitConnectModal } = useStarknetkitConnectModal({
+    connectors: sortedConnectors as any,
+  });
   const fetchAndUpdateNotifications = async () => {
     if (!address) return;
     const res = await getPendingBoostClaims(hexToDecimal(address));
