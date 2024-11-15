@@ -164,8 +164,17 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
             {identity.domain?.domain || 'Unknown Domain'}
           </Typography>
           <div className={styles.address_div}>
-            <div className='flex items-center gap-2'>
-              <Typography
+            <div className='flex items-center gap-2 h-6'>
+            {totalBalance === null?
+            <Skeleton
+            variant='text'
+            sx={{ bgcolor: "grey.600" }}
+            width={60}
+            height={30}
+          />
+            :
+            <>
+               <Typography
                 type={TEXT_TYPE.BODY_SMALL}
                 className={`${styles.wallet_amount} font-extrabold`}
               >
@@ -173,7 +182,7 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                   hidePortfolio ? (
                     '******'
                   ) : (
-                    `$${totalBalance.toFixed(2)}`
+                    `$${totalBalance?.toFixed(2)}`
                   )
                 ) : (
                   <Skeleton
@@ -184,11 +193,13 @@ const ProfileCard: FunctionComponent<ProfileCardProps> = ({
                 )}
               </Typography>
               <div
-                onClick={() => setHidePortfolio(!hidePortfolio)}
-                className='cursor-pointer'
-              >
-                {hidePortfolio ? <EyeIconSlashed /> : <EyeIcon />}
-              </div>
+                  onClick={() => setHidePortfolio(!hidePortfolio)}
+                  className='cursor-pointer'
+                >
+                  {hidePortfolio ? <EyeIconSlashed /> : <EyeIcon />}
+                </div>
+            </>  
+          }   
             </div>
           </div>
           <div className='flex sm:hidden justify-center py-4'>
