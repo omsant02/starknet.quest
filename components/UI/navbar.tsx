@@ -211,7 +211,7 @@ const Navbar: FunctionComponent = () => {
                 <li className={styles.menuItem}>Quests</li>
               </Link>
               <Link href={`/discover/defi`}>
-                <li className={styles.menuItem}>Earn</li>
+                <li className={styles.menuItem}>DeFi</li>
               </Link>
               {isConnected && (
                 <Link href={`/${address}`}>
@@ -286,7 +286,7 @@ const Navbar: FunctionComponent = () => {
                       onClick={() => setNav(false)}
                       className={styles.menuItemSmall}
                     >
-                      Earn
+                      DeFi
                     </li>
                   </Link>
                   {isConnected && (
