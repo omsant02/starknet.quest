@@ -19,7 +19,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="provide liquidity icon"
         >
           <path
             d="M10 2L3 6V14L10 18L17 14V6L10 2Z"
@@ -44,7 +44,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="stake icon"
         >
           <circle cx="10" cy="10" r="8" stroke="#F97316" strokeWidth="2" />
         </svg>
@@ -63,7 +63,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="yield farming icon"
         >
           <path
             d="M2 10L6 6M6 6L10 2L14 6M6 6V18M14 6L18 10M14 6V18"
@@ -88,7 +88,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="supply icon"
         >
           <path
             d="M17 6H3M12 10H3M12 14H3"
@@ -112,7 +112,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="lend & borrow icon"
         >
           <path
             d="M2 10H18M2 10V16H18V10M2 10V4H18V10"
@@ -136,7 +136,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="collateral icon"
         >
           <path
             d="M4 9V6C4 3.79086 5.79086 2 8 2H12C14.2091 2 16 3.79086 16 6V9M4 9H16M4 9V16C4 17.1046 4.89543 18 6 18H14C15.1046 18 16 17.1046 16 16V9"
@@ -159,7 +159,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="impermanent loss icon"
         >
           <path
             d="M18 6L10 14L6 10L2 14M18 6H14M18 6V10"
@@ -184,7 +184,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="tvl icon"
         >
           <path
             d="M2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18"
@@ -208,7 +208,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="apr icon"
         >
           <path
             d="M2 18L18 2M2 2L18 18"
@@ -232,7 +232,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="apy icon"
         >
           <path
             d="M2 18L18 2M2 10L10 2L18 10L10 18L2 10Z"
@@ -257,7 +257,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="swap icon"
         >
           <path
             d="M2 5H18M2 5L5 2M2 5L5 8M18 15H2M18 15L15 12M18 15L15 18"
@@ -282,7 +282,7 @@ export const DEFI_CONCEPTS: DefiConcept[] = [
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="[concept] icon"
+          aria-label="bridge icon"
         >
           <path
             d="M4 10H16M4 10V18M4 10V2M16 10V18M16 10V2M2 2H18M2 18H18"
