@@ -10,7 +10,7 @@ interface DefiConceptCardProps {
 
 const DefiConceptCard = ({ title, description, icon }: DefiConceptCardProps) => {
   return (
-    <div className="bg-[#1A1B1F] rounded-xl p-4">
+    <div className="bg-[#1A1B1F] rounded-xl p-4 transition-all duration-300 ease-in-out hover:transform hover:-translate-y-1 hover:bg-[#4a4c53] hover:shadow-lg hover:shadow-[#ffffff0d] cursor-pointer">
       {/* Icon wrapper to control size */}
       <div className="mb-3">
         {icon}
