@@ -45,7 +45,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex w-full flex-col mt-24 gap-8 items-center">
+    <div className="flex w-full flex-col mt-24 gap-8 items-center mb-32">
       {/* <div
         className={`w-full h-[400px] ${styles.backgroundImage} flex justify-center items-center`}
       >
@@ -62,19 +62,19 @@ export default function Page() {
           </Typography>
         </div>
       </div> */}
-      <div className="mx-4 p-6 border-[1px] border-[#f4faff4d] rounded-xl w-full lg:w-3/4">
+      <div className="mx-4 p-6 border-[1px] border-[#f4faff4d] rounded-xl w-full lg:w-3/4 mb-36">
         <DataTable loading={loading} data={data} />
       </div>
 
       <div className="mx-4 w-full lg:w-3/4">
-        <Typography type={TEXT_TYPE.H2} className="mb-6 text-white font-bold">
+        <Typography type={TEXT_TYPE.H2} className="mb-8 text-white font-bold text-2xl">
           Essential DeFi Concepts
         </Typography>
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 gap-y-6"
           aria-label="DeFi concept cards grid"
         >
-          {DEFI_CONCEPTS.map((concept, index) => (
+          {DEFI_CONCEPTS.map((concept) => (
             <DeFiConceptCard
               key={concept.title}
               title={concept.title}
