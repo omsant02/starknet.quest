@@ -66,22 +66,24 @@ export default function Page() {
         <DataTable loading={loading} data={data} />
       </div>
 
-      <div className="mx-4 w-full lg:w-3/4">
-        <Typography type={TEXT_TYPE.H2} className="mb-8 text-white font-bold text-2xl">
-          Essential DeFi Concepts
-        </Typography>
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 gap-y-6"
-          aria-label="DeFi concept cards grid"
-        >
-          {DEFI_CONCEPTS.map((concept) => (
-            <DeFiConceptCard
-              key={concept.title}
-              title={concept.title}
-              description={concept.description}
-              icon={concept.icon}
-            />
-          ))}
+      <div className="w-full lg:w-3/4 px-5 lg:px-0">
+        <div className="max-w-sm md:max-w-none mx-auto">
+          <Typography type={TEXT_TYPE.H2} className="mb-8 text-center lg:text-left text-white font-bold text-2xl">
+            Essential DeFi Concepts
+          </Typography>
+          <div
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            aria-label="DeFi concept cards grid"
+          >
+            {DEFI_CONCEPTS.map((concept) => (
+              <DeFiConceptCard
+                key={concept.title}
+                title={concept.title}
+                description={concept.description}
+                icon={concept.icon}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
