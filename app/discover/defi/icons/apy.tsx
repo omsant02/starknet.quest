@@ -1,4 +1,6 @@
-export const ApyIcon = () => (
+import { FC } from 'react';
+
+export const ApyIcon:FC = () => (
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-teal-500/10">
       <svg
         width="48"
@@ -13,9 +15,9 @@ export const ApyIcon = () => (
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
-        <g clip-path="url(#clip0_6356_2036)">
+        <g clipPath="url(#clip0_6356_2036)">
           <path
             d="M16.168 32.5C16.9964 32.5 17.668 31.8284 17.668 31C17.668 30.1716 16.9964 29.5 16.168 29.5C15.3395 29.5 14.668 30.1716 14.668 31C14.668 31.8284 15.3395 32.5 16.168 32.5Z"
             fill="#5CE3FE"

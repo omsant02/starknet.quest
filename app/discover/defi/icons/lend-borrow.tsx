@@ -1,4 +1,6 @@
-export const LendBorrow = () => (
+import { FC } from 'react';
+
+export const LendBorrow:FC = () => (
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-yellow-500/10">
       <svg
         width="48"
@@ -14,7 +16,7 @@ export const LendBorrow = () => (
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
         <g filter="url(#filter0_i_6356_1957)">
           <path
@@ -302,8 +304,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(26.1518 21.0716) rotate(100.07) scale(11.5054 12.0506)"
           >
-            <stop stop-color="#F6C93B" />
-            <stop offset="1" stop-color="#E88340" />
+            <stop stopColor="#F6C93B" />
+            <stop offset="1" stopColor="#E88340" />
           </radialGradient>
           <radialGradient
             id="paint1_radial_6356_1957"
@@ -313,8 +315,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(29.0432 22.8677) rotate(133.199) scale(4.39397 7.36162)"
           >
-            <stop stop-color="#FFE065" />
-            <stop offset="1" stop-color="#FFE065" stop-opacity="0" />
+            <stop stopColor="#FFE065" />
+            <stop offset="1" stopColor="#FFE065" stop-opacity="0" />
           </radialGradient>
           <radialGradient
             id="paint2_radial_6356_1957"
@@ -324,8 +326,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(17.793 22.8684) rotate(31.6513) scale(3.34982 8.30206)"
           >
-            <stop offset="0.187" stop-color="#FFA45D" />
-            <stop offset="1" stop-color="#FFA45D" stop-opacity="0" />
+            <stop offset="0.187" stopColor="#FFA45D" />
+            <stop offset="1" stopColor="#FFA45D" stop-opacity="0" />
           </radialGradient>
           <radialGradient
             id="paint3_radial_6356_1957"
@@ -335,8 +337,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(24.1405 29.7821) rotate(-90) scale(10.1953 15.3608)"
           >
-            <stop offset="0.928" stop-color="#F3BD46" stop-opacity="0" />
-            <stop offset="0.98" stop-color="#917011" />
+            <stop offset="0.928" stopColor="#F3BD46" stop-opacity="0" />
+            <stop offset="0.98" stopColor="#917011" />
           </radialGradient>
           <linearGradient
             id="paint4_linear_6356_1957"
@@ -346,8 +348,8 @@ export const LendBorrow = () => (
             y2="18.6046"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#F3C048" />
-            <stop offset="1" stop-color="#E67A41" />
+            <stop stopColor="#F3C048" />
+            <stop offset="1" stopColor="#E67A41" />
           </linearGradient>
           <linearGradient
             id="paint5_linear_6356_1957"
@@ -357,8 +359,8 @@ export const LendBorrow = () => (
             y2="30.6271"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#A6782C" />
-            <stop offset="1" stop-color="#B95940" />
+            <stop stopColor="#A6782C" />
+            <stop offset="1" stopColor="#B95940" />
           </linearGradient>
           <linearGradient
             id="paint6_linear_6356_1957"
@@ -368,8 +370,8 @@ export const LendBorrow = () => (
             y2="27.672"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#9D6360" />
-            <stop offset="1" stop-color="#724A4D" />
+            <stop stopColor="#9D6360" />
+            <stop offset="1" stopColor="#724A4D" />
           </linearGradient>
           <linearGradient
             id="paint7_linear_6356_1957"
@@ -379,8 +381,8 @@ export const LendBorrow = () => (
             y2="19.2648"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#834B41" />
-            <stop offset="1" stop-color="#735854" />
+            <stop stopColor="#834B41" />
+            <stop offset="1" stopColor="#735854" />
           </linearGradient>
           <radialGradient
             id="paint8_radial_6356_1957"
@@ -390,8 +392,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(25.2947 19.0598) rotate(180) scale(1.16699 0.878906)"
           >
-            <stop stop-color="#7D5A54" />
-            <stop offset="1" stop-color="#7D5A54" stop-opacity="0" />
+            <stop stopColor="#7D5A54" />
+            <stop offset="1" stopColor="#7D5A54" stop-opacity="0" />
           </radialGradient>
           <radialGradient
             id="paint9_radial_6356_1957"
@@ -401,8 +403,8 @@ export const LendBorrow = () => (
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(25.4509 19.2648) rotate(180) scale(3.45703 2.76939)"
           >
-            <stop offset="0.695" stop-color="#B3624D" stop-opacity="0" />
-            <stop offset="0.96" stop-color="#B3624D" />
+            <stop offset="0.695" stopColor="#B3624D" stop-opacity="0" />
+            <stop offset="0.96" stopColor="#B3624D" />
           </radialGradient>
         </defs>
       </svg>

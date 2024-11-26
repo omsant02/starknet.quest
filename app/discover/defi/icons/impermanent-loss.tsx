@@ -1,4 +1,6 @@
-export const ImpermanentLossIcon =()=>(
+import { FC } from 'react';
+
+export const ImpermanentLossIcon:FC =()=>(
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-500/10">
       <svg
         width="48"
@@ -14,9 +16,9 @@ export const ImpermanentLossIcon =()=>(
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
-        <g clip-path="url(#clip0_6356_1993)">
+        <g clipPath="url(#clip0_6356_1993)">
           <path
             d="M26.4481 17.2891C26.2812 16.9906 26.0377 16.742 25.7427 16.5689C25.4476 16.3959 25.1118 16.3047 24.7698 16.3047C24.4278 16.3047 24.0919 16.3959 23.7969 16.5689C23.5019 16.742 23.2584 16.9906 23.0914 17.2891L15.7797 30.3681C15.6161 30.6607 15.5319 30.9909 15.5353 31.326C15.5387 31.6612 15.6296 31.9896 15.799 32.2788C15.9685 32.5679 16.2106 32.8078 16.5013 32.9745C16.792 33.1413 17.1213 33.2292 17.4565 33.2295H32.0769C32.4122 33.2294 32.7417 33.1418 33.0326 32.9751C33.3236 32.8085 33.5659 32.5686 33.7355 32.2794C33.9052 31.9902 33.9962 31.6617 33.9997 31.3264C34.0032 30.9911 33.9189 30.6608 33.7553 30.3681L26.4481 17.2891Z"
             fill="url(#paint0_linear_6356_1993)"
@@ -35,8 +37,8 @@ export const ImpermanentLossIcon =()=>(
             y2="35.5754"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#FFCD0F" />
-            <stop offset="1" stop-color="#FE8401" />
+            <stop stopColor="#FFCD0F" />
+            <stop offset="1" stopColor="#FE8401" />
           </linearGradient>
           <linearGradient
             id="paint1_linear_6356_1993"
@@ -46,8 +48,8 @@ export const ImpermanentLossIcon =()=>(
             y2="31.0365"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#4A4A4A" />
-            <stop offset="1" stop-color="#212121" />
+            <stop stopColor="#4A4A4A" />
+            <stop offset="1" stopColor="#212121" />
           </linearGradient>
           <clipPath id="clip0_6356_1993">
             <rect

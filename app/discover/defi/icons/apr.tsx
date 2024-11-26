@@ -1,4 +1,6 @@
-export const AprIcon = () => (
+import { FC } from 'react';
+
+export const AprIcon:FC = () => (
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-500/10">
       <svg
         width="48"
@@ -13,7 +15,7 @@ export const AprIcon = () => (
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
         <path
           d="M16 28C16.8284 28 17.5 27.3284 17.5 26.5C17.5 25.6716 16.8284 25 16 25C15.1716 25 14.5 25.6716 14.5 26.5C14.5 27.3284 15.1716 28 16 28Z"

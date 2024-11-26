@@ -1,4 +1,6 @@
-export const StakeIcon = ()=>(
+import { FC } from 'react';
+
+export const StakeIcon:FC = ()=>(
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-500/10">
       <svg
         width="48"
@@ -14,9 +16,9 @@ export const StakeIcon = ()=>(
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
-        <g clip-path="url(#clip0_6356_1915)">
+        <g clipPath="url(#clip0_6356_1915)">
           <path
             d="M24 14C21.25 14 19 16.25 19 19V21H21V19C21 17.35 22.35 16 24 16C25.65 16 27 17.35 27 19V21H29V19C29 16.25 26.75 14 24 14Z"
             fill="#424242"

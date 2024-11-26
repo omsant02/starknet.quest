@@ -1,4 +1,6 @@
-export const TvlIcon = () =>(
+import { FC } from 'react';
+
+export const TvlIcon:FC = () =>(
     <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500/10">
       <svg
         width="48"
@@ -14,9 +16,9 @@ export const TvlIcon = () =>(
           height="48"
           rx="24"
           fill="white"
-          fill-opacity="0.04"
+          fillOpacity="0.04"
         />
-        <g clip-path="url(#clip0_6356_2005)">
+        <g clipPath="url(#clip0_6356_2005)">
           <path
             d="M21.543 19.4004L18.9023 21.5363L20.1258 26.6723L21.4695 28.0879L26.6523 27.7285L28.093 26.2645C28.093 26.2645 27.9242 21.1285 27.8523 21.0816C27.7805 21.0332 26.6758 20.0254 26.6758 20.0254L21.543 19.4004Z"
             fill="#8FD0EB"
@@ -55,8 +57,8 @@ export const TvlIcon = () =>(
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(24.0384 22.1008) scale(5.61062)"
           >
-            <stop offset="0.427" stop-color="#1F87FB" />
-            <stop offset="0.816" stop-color="#05BFEA" />
+            <stop offset="0.427" stopColor="#1F87FB" />
+            <stop offset="0.816" stopColor="#05BFEA" />
           </radialGradient>
           <radialGradient
             id="paint1_radial_6356_2005"
@@ -66,8 +68,8 @@ export const TvlIcon = () =>(
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(24.9731 23.9605) scale(5.99031)"
           >
-            <stop offset="0.427" stop-color="#1F87FB" />
-            <stop offset="0.816" stop-color="#05BFEA" />
+            <stop offset="0.427" stopColor="#1F87FB" />
+            <stop offset="0.816" stopColor="#05BFEA" />
           </radialGradient>
           <radialGradient
             id="paint2_radial_6356_2005"
@@ -77,8 +79,8 @@ export const TvlIcon = () =>(
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(22.205 23.8345) scale(5.72406)"
           >
-            <stop offset="0.427" stop-color="#1F87FB" />
-            <stop offset="0.816" stop-color="#05BFEA" />
+            <stop offset="0.427" stopColor="#1F87FB" />
+            <stop offset="0.816" stopColor="#05BFEA" />
           </radialGradient>
           <radialGradient
             id="paint3_radial_6356_2005"
@@ -88,8 +90,8 @@ export const TvlIcon = () =>(
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(23.981 26.1915) scale(5.08359)"
           >
-            <stop offset="0.427" stop-color="#1F87FB" />
-            <stop offset="0.816" stop-color="#05BFEA" />
+            <stop offset="0.427" stopColor="#1F87FB" />
+            <stop offset="0.816" stopColor="#05BFEA" />
           </radialGradient>
           <clipPath id="clip0_6356_2005">
             <rect
